@@ -824,7 +824,7 @@ function startRecording() {
 
         mediaRecorder.onstop = () => {
             console.log("Grabación detenida. Procesando chunks...");
-             stopRecordingButton.textContent = "Detener y Descargar";
+             stopRecordingButton.textContent = "STOP & DOWNLOAD";
              stopRecordingButton.disabled = true;
 
              startRecordingButton.disabled = !(sourceType === 'video' || sourceType === 'webcam') || !isVideoPlaying;
