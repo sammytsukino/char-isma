@@ -7,6 +7,8 @@
 [Explore CHAR/ISMA now in Vercel](https://char-isma.vercel.app/)
 
 ![processed_video_1744582622718-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/39487a6d-7649-4681-b3f1-bca37ca6d8f4)
+![processed_video_1744536976824-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/3e6c7d07-d05f-41d8-bfb9-b3cb3f5c1387)
+![ezgif-5fc3832c1ed5fd](https://github.com/user-attachments/assets/ab9b3a81-bb61-4c66-a6bd-b6ce57717514)
 
 
 ## Key Features
@@ -47,6 +49,8 @@ CHAR/ISMA analyzes the brightness values of your source media and maps them to d
 - Capture frames
 
 ## Examples
+
+
 
 ### Character Mode
 Perfect for classic ASCII art. Try using:
