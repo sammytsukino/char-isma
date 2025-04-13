@@ -1,7 +1,5 @@
 # CHAR/ISMA: ASCII & Pixel Art Generator
 
-![CHAR/ISMA Banner](https://i.imgur.com/placeholder.png)
-
 ## Overview
 
 **CHAR/ISMA** is a simple yet powerful web application that transforms images, videos, and webcam footage into ASCII and pixel art. Designed with a distinctive brutalist aesthetic, it allows users to create unique visual art from any multimedia content.
@@ -93,7 +91,7 @@ Built with vanilla JavaScript, HTML5 Canvas, and CSS, it demonstrates how powerf
 
 ```bash
 # Clone the repository
-git clone https://github.com/SammyCabello/char-isma.git
+git clone https://github.com/sammytsukino/char-isma.git
 
 # Navigate to the project directory
 cd char-isma
