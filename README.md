@@ -6,6 +6,9 @@
 
 [Explore CHAR/ISMA now in Vercel](https://char-isma.vercel.app/)
 
+![processed_video_1744582622718-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/39487a6d-7649-4681-b3f1-bca37ca6d8f4)
+
+
 ## Key Features
 
 - **Multiple Input Sources**: Process images, videos, and real-time webcam feeds
