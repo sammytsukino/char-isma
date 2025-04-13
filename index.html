@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAR/ISMA</title>
+    <link rel="icon" href="images/Favicon-PV.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <video id="source-video" style="display: none;" playsinline muted></video>
+
+    <div class="overlay">
+        <div class="controls">
+            <h2 class="app-title">CHAR/ISMA</h2>
+            
+            <details class="accordion" open>
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-file-import"></i> SOURCE
+                    </div>
+                </summary>
+                <div class="content">
+                    <div class="file-input-wrapper">
+                        <div class="file-input-button">
+                            <i class="fas fa-upload"></i> UPLOAD IMAGE OR VIDEO
+                        </div>
+                        <input type="file" id="media-upload" accept="image/*,video/*">
+                    </div>
+                    <button id="use-webcam" class="action-btn">
+                        <i class="fas fa-camera"></i> USE WEBCAM
+                    </button>
+                </div>
+            </details>
+
+            <details class="accordion" id="cell-type-accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-palette"></i> CELL STYLE
+                    </div>
+                </summary>
+                <div class="content">
+                    <button id="invert-cell-styles" class="action-btn style-invert-btn">
+                        <i class="fas fa-sync-alt"></i> INVERT LIGHT/DARK AREAS
+                    </button>
+                    
+                    <div class="cell-style-section">
+                        <h4><i class="fas fa-square"></i> BACKGROUND (DARK AREAS)</h4>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeDark" value="character" checked> CHARACTER
+                            </label>
+                            <div id="character-controls-dark">
+                                <label for="char0">CHARACTER:</label>
+                                <input type="text" id="char0" maxlength="1" value="1">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeDark" value="icon"> ICON
+                            </label>
+                            <div id="icon-controls-dark" style="display: none;">
+                                <div class="file-input-wrapper">
+                                    <div class="file-input-button">
+                                        <i class="fas fa-image"></i> SELECT ICON
+                                    </div>
+                                    <input type="file" id="icon0-upload" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeDark" value="gradient"> GRADIENT
+                            </label>
+                            <div id="gradient-controls-dark" style="display: none;">
+                                <fieldset>
+                                    <legend><i class="fas fa-fill-drip"></i> SETTINGS</legend>
+                                    <div class="control-grid">
+                                        <div>
+                                            <label for="gradient0Color1">START:</label>
+                                            <input type="color" id="gradient0Color1" value="#ff0000">
+                                        </div>
+                                        <div>
+                                            <label for="gradient0Color2">END:</label>
+                                            <input type="color" id="gradient0Color2" value="#0000ff">
+                                        </div>
+                                    </div>
+                                    <label for="gradient0Direction">DIRECTION:</label>
+                                    <select id="gradient0Direction">
+                                        <option value="horizontal">HORIZONTAL</option>
+                                        <option value="vertical">VERTICAL</option>
+                                        <option value="diagonal">DIAGONAL</option>
+                                    </select>
+                                </fieldset>
+                                <div class="preview-container">
+                                    <canvas id="gradient-preview-0" width="50" height="50"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cell-style-section">
+                        <h4><i class="fas fa-square-full"></i> ELEMENT (LIGHT AREAS)</h4>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeBright" value="character" checked> CHARACTER
+                            </label>
+                            <div id="character-controls-bright">
+                                <label for="char1">CHARACTER:</label>
+                                <input type="text" id="char1" maxlength="1" value="0">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeBright" value="icon"> ICON
+                            </label>
+                            <div id="icon-controls-bright" style="display: none;">
+                                <div class="file-input-wrapper">
+                                    <div class="file-input-button">
+                                        <i class="fas fa-image"></i> SELECT ICON
+                                    </div>
+                                    <input type="file" id="icon1-upload" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeBright" value="gradient"> GRADIENT
+                            </label>
+                            <div id="gradient-controls-bright" style="display: none;">
+                                <fieldset>
+                                    <legend><i class="fas fa-fill-drip"></i> SETTINGS</legend>
+                                    <div class="control-grid">
+                                        <div>
+                                            <label for="gradient1Color1">START:</label>
+                                            <input type="color" id="gradient1Color1" value="#00ff00">
+                                        </div>
+                                        <div>
+                                            <label for="gradient1Color2">END:</label>
+                                            <input type="color" id="gradient1Color2" value="#0000ff">
+                                        </div>
+                                    </div>
+                                    <label for="gradient1Direction">DIRECTION:</label>
+                                    <select id="gradient1Direction">
+                                        <option value="horizontal">HORIZONTAL</option>
+                                        <option value="vertical">VERTICAL</option>
+                                        <option value="diagonal">DIAGONAL</option>
+                                    </select>
+                                </fieldset>
+                                <div class="preview-container">
+                                    <canvas id="gradient-preview-1" width="50" height="50"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+            
+            <details class="accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-fill"></i> COLORS
+                    </div>
+                </summary>
+                <div class="content">
+                    <div class="control-grid">
+                        <div>
+                            <label for="textColor0">TEXT (BG):</label>
+                            <input type="color" id="textColor0" value="#000000">
+                        </div>
+                        <div>
+                            <label for="textColor1">TEXT (ELEM):</label>
+                            <input type="color" id="textColor1" value="#000000">
+                        </div>
+                    </div>
+                    <label for="bgColor">CANVAS COLOR:</label>
+                    <input type="color" id="bgColor" value="#FFFFFF">
+                </div>
+            </details>
+            
+            <details class="accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-th"></i> GRID & THRESHOLD
+                    </div>
+                </summary>
+                <div class="content">
+                    <div class="control-grid">
+                        <div>
+                            <label for="numCols">COLUMNS:</label>
+                            <input type="number" id="numCols" min="1" value="80">
+                        </div>
+                        <div>
+                            <label for="numRows">ROWS:</label>
+                            <input type="number" id="numRows" min="1" value="45">
+                        </div>
+                    </div>
+                    <label for="threshold">BRIGHTNESS THRESHOLD:</label>
+                    <input type="range" id="threshold" min="0" max="255" value="128">
+                </div>
+            </details>
+            
+            <div class="actions">
+                <div class="control-grid">
+                    <button id="play-button" disabled class="action-btn">
+                        <i class="fas fa-play"></i> PLAY
+                    </button>
+                    <button id="pause-button" disabled class="action-btn">
+                        <i class="fas fa-pause"></i> PAUSE
+                    </button>
+                </div>
+                
+                <div class="control-grid">
+                    <button id="start-recording" disabled class="action-btn">
+                        <i class="fas fa-record-vinyl"></i> RECORD
+                    </button>
+                    <button id="stop-recording" disabled class="action-btn">
+                        <i class="fas fa-stop"></i> STOP
+                    </button>
+                </div>
+                
+                <div class="control-grid">
+                    <button id="apply-effect" class="action-btn">
+                        <i class="fas fa-magic"></i> APPLY
+                    </button>
+                    <button id="reset-effect" class="action-btn">
+                        <i class="fas fa-undo"></i> RESET
+                    </button>
+                </div>
+                
+                <a id="capture-frame" style="display:none;" download="processed_frame.png" class="action-btn">
+                    <i class="fas fa-camera"></i> CAPTURE
+                </a>
+            </div>
+            
+            <div class="credits">
+                <p>CRAFTED BY <strong>SAMMYCABELLO</strong></p>
+            </div>
+            <footer class="project-footer">
+                <div class="footer-content">
+                    <p>CHAR/ISMA TRANSFORMS IMAGES, VIDEOS AND WEBCAM FOOTAGE INTO ASCII/PIXEL ART USING CHARACTERS, GRADIENTS OR CUSTOM ICONS.</p>
+                    <p class="version">VERSION 1.0 | 2025</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <img id="thumbnail" class="thumbnail" style="display:none;">
+
+    <script src="script.js"></script>
+</body>
+</html>
