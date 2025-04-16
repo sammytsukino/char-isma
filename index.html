@@ -102,6 +102,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeDark" value="solid"> SOLID COLOR
+                            </label>
+                            <div id="solid-controls-dark" style="display: none;">
+                                <label for="solid0Color">COLOR:</label>
+                                <input type="color" id="solid0Color" value="#000000">
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="cell-style-section">
@@ -157,6 +166,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeBright" value="solid"> SOLID COLOR
+                            </label>
+                            <div id="solid-controls-bright" style="display: none;">
+                                <label for="solid1Color">COLOR:</label>
+                                <input type="color" id="solid1Color" value="#ffffff">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -190,16 +208,12 @@
                     </div>
                 </summary>
                 <div class="content">
-                    <div class="control-grid">
-                        <div>
-                            <label for="numCols">COLUMNS:</label>
-                            <input type="number" id="numCols" min="1" value="80">
-                        </div>
-                        <div>
-                            <label for="numRows">ROWS:</label>
-                            <input type="number" id="numRows" min="1" value="45">
-                        </div>
+                    <label for="gridSize">GRID SIZE:</label>
+                    <input type="range" id="gridSize" min="10" max="200" value="80">
+                    <div class="grid-info">
+                        <span id="gridSizeDisplay">80 x 45</span>
                     </div>
+                    
                     <label for="threshold">BRIGHTNESS THRESHOLD:</label>
                     <input type="range" id="threshold" min="0" max="255" value="128">
                 </div>
