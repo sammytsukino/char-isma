@@ -82,67 +82,16 @@ let recordedChunks = [];
 const tempCanvas = document.createElement('canvas');
 const tempCtx = tempCanvas.getContext('2d');
 
-let canvasAspectRatio = 16 / 9; // Proporción predeterminada
-let sourceWidth = 0;
-let sourceHeight = 0;
-
 function resizeCanvas() {
     const isMobile = window.innerWidth <= 768;
-    let availableWidth, availableHeight;
     
     if (isMobile) {
-        availableWidth = window.innerWidth;
-        availableHeight = window.innerHeight * 0.4;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight * 0.4;
     } else {
-        availableWidth = window.innerWidth - 300;
-        availableHeight = window.innerHeight;
+        canvas.width = window.innerWidth - 300;
+        canvas.height = window.innerHeight;
     }
-    
-    // Si tenemos contenido cargado, usar su aspect ratio
-    if ((sourceType === 'image' && imageLoaded) || 
-        (sourceType === 'video' || sourceType === 'webcam') && sourceVideo.readyState >= 2) {
-        
-        if (sourceType === 'image') {
-            canvasAspectRatio = originalImage.width / originalImage.height;
-            sourceWidth = originalImage.width;
-            sourceHeight = originalImage.height;
-        } else {
-            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
-            sourceWidth = sourceVideo.videoWidth;
-            sourceHeight = sourceVideo.videoHeight;
-        }
-    }
-    
-    let canvasWidth, canvasHeight;
-    const containerAspect = availableWidth / availableHeight;
-    
-    // Determinar si ajustar por ancho o alto
-    if (containerAspect > canvasAspectRatio) {
-        // Contenedor más ancho que el contenido: ajustar por altura
-        canvasHeight = availableHeight;
-        canvasWidth = canvasHeight * canvasAspectRatio;
-    } else {
-        // Contenedor más alto que el contenido: ajustar por ancho
-        canvasWidth = availableWidth;
-        canvasHeight = canvasWidth / canvasAspectRatio;
-    }
-    
-    // Establecer dimensiones del canvas visibles para el usuario
-    canvas.style.width = `${canvasWidth}px`;
-    canvas.style.height = `${canvasHeight}px`;
-    
-    // Mantener la resolución real para la calidad de salida
-    // Para exportaciones usaremos las dimensiones reales del contenido
-    if (sourceWidth > 0 && sourceHeight > 0) {
-        canvas.width = sourceWidth;
-        canvas.height = sourceHeight;
-    } else {
-        // Si no hay contenido, usar dimensiones proporcionales pero con calidad HD
-        canvas.width = Math.floor(1280 * (canvasWidth / canvasHeight));
-        canvas.height = 720;
-    }
-    
-    console.log(`Canvas redimensionado a: ${canvas.width}x${canvas.height} (visual: ${canvasWidth}x${canvasHeight})`);
     
     if (sourceType === 'image' && imageLoaded) {
         drawOriginalImage();
@@ -209,13 +158,6 @@ mediaInput.addEventListener('change', (event) => {
             thumbnail.src = fileURL;
             thumbnail.style.display = 'block';
             console.log("Imagen cargada:", file.name);
-            
-            // Actualizar el aspect ratio y redimensionar el canvas
-            canvasAspectRatio = originalImage.width / originalImage.height;
-            sourceWidth = originalImage.width;
-            sourceHeight = originalImage.height;
-            resizeCanvas();
-            
             drawOriginalImage();
             applyButton.disabled = false;
             playButton.disabled = true;
@@ -238,13 +180,6 @@ mediaInput.addEventListener('change', (event) => {
 
         sourceVideo.onloadedmetadata = () => {
             console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
-            
-            // Actualizar aspect ratio y redimensionar el canvas
-            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
-            sourceWidth = sourceVideo.videoWidth;
-            sourceHeight = sourceVideo.videoHeight;
-            resizeCanvas();
-            
             tempCanvas.width = sourceVideo.videoWidth;
             tempCanvas.height = sourceVideo.videoHeight;
         };
@@ -302,13 +237,6 @@ useWebcamButton.addEventListener('click', async () => {
 
         sourceVideo.onloadedmetadata = () => {
             console.log("Stream de webcam iniciado. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
-            
-            // Actualizar aspect ratio y redimensionar el canvas
-            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
-            sourceWidth = sourceVideo.videoWidth;
-            sourceHeight = sourceVideo.videoHeight;
-            resizeCanvas();
-            
             tempCanvas.width = sourceVideo.videoWidth;
             tempCanvas.height = sourceVideo.videoHeight;
             sourceVideo.play();
@@ -323,15 +251,50 @@ useWebcamButton.addEventListener('click', async () => {
 
 function drawOriginalImage() {
     if (!imageLoaded || sourceType !== 'image') return;
-    
-    // Limpiar el canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Dibujar la imagen en todo el canvas
-    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
-    
-    console.log("Imagen original dibujada en canvas respetando proporciones.");
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+    const imgWidth = originalImage.width;
+    const imgHeight = originalImage.height;
+    let drawWidth, drawHeight, offsetX, offsetY;
+    const canvasAspect = width / height;
+    const imgAspect = imgWidth / imgHeight;
+
+    if (imgAspect > canvasAspect) {
+        drawWidth = width;
+        drawHeight = drawWidth / imgAspect;
+        offsetX = 0;
+        offsetY = (height - drawHeight) / 2;
+    } else {
+        drawHeight = height;
+        drawWidth = drawHeight * imgAspect;
+        offsetY = 0;
+        offsetX = (width - drawWidth) / 2;
+    }
+    ctx.drawImage(originalImage, offsetX, offsetY, drawWidth, drawHeight);
+    console.log("Imagen original dibujada en canvas.");
 }
+
+icon0Input.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        icon0Loaded = false;
+        icon0Image = new Image();
+        icon0Image.onload = () => { icon0Loaded = true; console.log("Icono Fondo (0) cargado"); };
+        icon0Image.onerror = () => { icon0Loaded = false; console.error("Error al cargar icono Fondo (0)"); };
+        icon0Image.src = URL.createObjectURL(file);
+    }
+});
+icon1Input.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        icon1Loaded = false;
+        icon1Image = new Image();
+        icon1Image.onload = () => { icon1Loaded = true; console.log("Icono Elemento (1) cargado"); };
+        icon1Image.onerror = () => { icon1Loaded = false; console.error("Error al cargar icono Elemento (1)"); };
+        icon1Image.src = URL.createObjectURL(file);
+    }
+});
 
 function generateGradient(colorStart, colorEnd, direction) {
     const gradCanvas = document.createElement('canvas');
@@ -375,16 +338,15 @@ function drawProcessedEffect() {
      if (!sourceType || (sourceType === 'image' && !imageLoaded)) {
          return;
      }
-     
-     // Obtener los datos de origen para el procesamiento
      let sourceData;
-     
+     let sourceWidth, sourceHeight;
+
      if (sourceType === 'image') {
-         tempCanvas.width = canvas.width;
-         tempCanvas.height = canvas.height;
-         tempCtx.drawImage(originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
-         sourceWidth = tempCanvas.width;
-         sourceHeight = tempCanvas.height;
+         tempCanvas.width = originalImage.width;
+         tempCanvas.height = originalImage.height;
+         tempCtx.drawImage(originalImage, 0, 0);
+         sourceWidth = originalImage.width;
+         sourceHeight = originalImage.height;
          try {
             sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
          } catch (e) {
@@ -398,15 +360,14 @@ function drawProcessedEffect() {
          if (!isVideoPlaying || sourceVideo.paused || sourceVideo.ended || sourceVideo.readyState < 3) {
              return;
          }
-         
-         tempCanvas.width = canvas.width;
-         tempCanvas.height = canvas.height;
-         
-         // Dibujar el video manteniendo proporciones
+         if (tempCanvas.width !== sourceVideo.videoWidth || tempCanvas.height !== sourceVideo.videoHeight) {
+             tempCanvas.width = sourceVideo.videoWidth;
+             tempCanvas.height = sourceVideo.videoHeight;
+             console.log("Ajustando tamaño de tempCanvas a:", tempCanvas.width, "x", tempCanvas.height);
+         }
          tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
          sourceWidth = tempCanvas.width;
          sourceHeight = tempCanvas.height;
-         
          try {
              sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
          } catch (e) {
