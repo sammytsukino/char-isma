@@ -82,7 +82,7 @@ let recordedChunks = [];
 const tempCanvas = document.createElement('canvas');
 const tempCtx = tempCanvas.getContext('2d');
 
-let canvasAspectRatio = 16 / 9; // Proporción predeterminada
+let canvasAspectRatio = 16 / 9;
 let sourceWidth = 0;
 let sourceHeight = 0;
 
@@ -98,7 +98,6 @@ function resizeCanvas() {
         availableHeight = window.innerHeight;
     }
     
-    // Si tenemos contenido cargado, usar su aspect ratio
     if ((sourceType === 'image' && imageLoaded) || 
         (sourceType === 'video' || sourceType === 'webcam') && sourceVideo.readyState >= 2) {
         
@@ -116,32 +115,24 @@ function resizeCanvas() {
     let canvasWidth, canvasHeight;
     const containerAspect = availableWidth / availableHeight;
     
-    // Determinar si ajustar por ancho o alto
     if (containerAspect > canvasAspectRatio) {
-        // Contenedor más ancho que el contenido: ajustar por altura
         canvasHeight = availableHeight;
         canvasWidth = canvasHeight * canvasAspectRatio;
     } else {
-        // Contenedor más alto que el contenido: ajustar por ancho
         canvasWidth = availableWidth;
         canvasHeight = canvasWidth / canvasAspectRatio;
     }
     
-    // Establecer dimensiones del canvas visibles para el usuario
     canvas.style.width = `${canvasWidth}px`;
     canvas.style.height = `${canvasHeight}px`;
     
-    // MODIFICACIÓN: Garantizar resolución mínima para la calidad de salida
-    // Usar un multiplicador para mantener la resolución alta independientemente del tamaño de la imagen original
     let minHeight = window.innerHeight;
     let minWidth = Math.ceil(minHeight * canvasAspectRatio);
     
     if (sourceWidth > 0 && sourceHeight > 0) {
-        // Usar el tamaño original como referencia pero garantizando una altura mínima
         canvas.width = Math.max(sourceWidth, minWidth);
         canvas.height = Math.max(sourceHeight, minHeight);
         
-        // Mantener la relación de aspecto
         if (canvas.width / canvas.height !== canvasAspectRatio) {
             if (canvas.width / canvas.height > canvasAspectRatio) {
                 canvas.width = Math.ceil(canvas.height * canvasAspectRatio);
@@ -150,7 +141,6 @@ function resizeCanvas() {
             }
         }
     } else {
-        // Si no hay contenido, usar dimensiones proporcionales con calidad alta
         canvas.width = minWidth;
         canvas.height = minHeight;
     }
@@ -223,7 +213,6 @@ mediaInput.addEventListener('change', (event) => {
             thumbnail.style.display = 'block';
             console.log("Imagen cargada:", file.name);
             
-            // Actualizar el aspect ratio y redimensionar el canvas
             canvasAspectRatio = originalImage.width / originalImage.height;
             sourceWidth = originalImage.width;
             sourceHeight = originalImage.height;
@@ -252,7 +241,6 @@ mediaInput.addEventListener('change', (event) => {
         sourceVideo.onloadedmetadata = () => {
             console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
             
-            // Actualizar aspect ratio y redimensionar el canvas
             canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
             sourceWidth = sourceVideo.videoWidth;
             sourceHeight = sourceVideo.videoHeight;
@@ -316,7 +304,6 @@ useWebcamButton.addEventListener('click', async () => {
         sourceVideo.onloadedmetadata = () => {
             console.log("Stream de webcam iniciado. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
             
-            // Actualizar aspect ratio y redimensionar el canvas
             canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
             sourceWidth = sourceVideo.videoWidth;
             sourceHeight = sourceVideo.videoHeight;
@@ -337,10 +324,8 @@ useWebcamButton.addEventListener('click', async () => {
 function drawOriginalImage() {
     if (!imageLoaded || sourceType !== 'image') return;
     
-    // Limpiar el canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Dibujar la imagen en todo el canvas
     ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
     
     console.log("Imagen original dibujada en canvas respetando proporciones.");
@@ -384,7 +369,6 @@ function updateGridSizeDisplay() {
 
 gridSizeInput.addEventListener('input', updateGridSizeDisplay);
 
-// Añadir manejadores de eventos para la carga de íconos
 icon0Input.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -405,7 +389,6 @@ icon0Input.addEventListener('change', (event) => {
     
     icon0Image.src = fileURL;
     
-    // Si estamos en modo imagen y ya tenemos una imagen cargada, actualizamos el efecto
     if (sourceType === 'image' && imageLoaded) {
         drawProcessedEffect();
     }
@@ -431,7 +414,6 @@ icon1Input.addEventListener('change', (event) => {
     
     icon1Image.src = fileURL;
     
-    // Si estamos en modo imagen y ya tenemos una imagen cargada, actualizamos el efecto
     if (sourceType === 'image' && imageLoaded) {
         drawProcessedEffect();
     }
@@ -442,7 +424,6 @@ function drawProcessedEffect() {
          return;
      }
      
-     // Obtener los datos de origen para el procesamiento
      let sourceData;
      
      if (sourceType === 'image') {
@@ -468,7 +449,6 @@ function drawProcessedEffect() {
          tempCanvas.width = canvas.width;
          tempCanvas.height = canvas.height;
          
-         // Dibujar el video manteniendo proporciones
          tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
          sourceWidth = tempCanvas.width;
          sourceHeight = tempCanvas.height;
@@ -610,10 +590,9 @@ function drawProcessedEffect() {
     }
     if (sourceType === 'image' || sourceType === 'video' || sourceType === 'webcam') {
         captureFrameLink.style.display = 'inline-block';
-        captureFrameLink.href = '#'; // Cambiar a # para manejar con evento click personalizado
-        captureFrameLink.textContent = 'CAPTURE IN HIGH-RES'; // Opcionalmente, actualizar el texto del botón
+        captureFrameLink.href = '#';
+
         
-        // Actualizar icono si es necesario
         const iconElement = captureFrameLink.querySelector('i');
         if (iconElement) {
             iconElement.className = 'fas fa-camera';
@@ -727,16 +706,13 @@ captureFrameLink.addEventListener('click', (event) => {
     if (sourceType === 'video' || sourceType === 'webcam' || sourceType === 'image') {
         console.log("Capturando fotograma en alta resolución...");
         
-        // Evitar la acción predeterminada para generar la imagen en alta resolución
         event.preventDefault();
         
-        // Crear un canvas temporal con el doble de tamaño
         const hiResCanvas = document.createElement('canvas');
         hiResCanvas.width = canvas.width * 2;
         hiResCanvas.height = canvas.height * 2;
         const hiResCtx = hiResCanvas.getContext('2d');
         
-        // Configurar el contexto de alta resolución igual que el original
         hiResCtx.fillStyle = bgColorInput.value;
         hiResCtx.fillRect(0, 0, hiResCanvas.width, hiResCanvas.height);
         hiResCtx.font = `${Math.min(canvas.width/parseInt(gridSizeInput.value), canvas.height/(parseInt(gridSizeInput.value) * canvas.height/canvas.width)) * 0.9 * 2}px monospace`;
@@ -744,10 +720,8 @@ captureFrameLink.addEventListener('click', (event) => {
         hiResCtx.textAlign = "left";
         hiResCtx.imageSmoothingEnabled = false;
         
-        // Generar la imagen de alta resolución con los mismos ajustes
         renderHighResolutionImage(hiResCanvas, hiResCtx);
         
-        // Obtener la URL de la imagen y forzar la descarga
         const hiResUrl = hiResCanvas.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = hiResUrl;
@@ -766,7 +740,6 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
         return;
     }
     
-    // Obtener los datos de origen para el procesamiento
     let sourceData;
     let sourceWidth, sourceHeight;
     
@@ -861,7 +834,6 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
         gradient1Canvas = tmpGradientCanvas;
     }
 
-    // Crear versiones de alta resolución para los iconos si se usan
     let hiResIcon0Image, hiResIcon1Image;
     if (selectedCellTypeDark === 'icon' && icon0Loaded) {
         hiResIcon0Image = new Image();
@@ -881,7 +853,6 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
             const startX = Math.round(col * blockWidth);
             const cellW = Math.round((col + 1) * blockWidth) - startX;
 
-            // Calcular la región correspondiente en la imagen fuente
             const sourceStartX = Math.floor(col * (sourceWidth / numCols));
             const sourceEndX = Math.floor((col + 1) * (sourceWidth / numCols));
             const sourceStartY = Math.floor(row * (sourceHeight / numRows));
@@ -890,7 +861,6 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
             let totalBrightness = 0;
             let pixelCount = 0;
 
-            // Calcular la luminosidad media de la región
             for (let y = sourceStartY; y < sourceEndY; y++) {
                 for (let x = sourceStartX; x < sourceEndX; x++) {
                     const index = (y * sourceWidth + x) * 4;

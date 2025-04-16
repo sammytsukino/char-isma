@@ -7,18 +7,15 @@
     <link rel="icon" href="https://res.cloudinary.com/dsy30p7gf/image/upload/v1744582316/Recurso_2charisma-ico_otizfc.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 </head>
 <body>
     <div class="canvas-container">
         <canvas id="canvas"></canvas>
     </div>
     <video id="source-video" style="display: none;" playsinline muted></video>
-
     <div class="overlay">
         <div class="controls">
             <h2 class="app-title">CHAR/ISMA</h2>
-            
             <details class="accordion" open>
                 <summary>
                     <div class="panel-header">
@@ -37,7 +34,6 @@
                     </button>
                 </div>
             </details>
-
             <details class="accordion" id="cell-type-accordion">
                 <summary>
                     <div class="panel-header">
@@ -48,7 +44,6 @@
                     <button id="invert-cell-styles" class="action-btn style-invert-btn">
                         <i class="fas fa-sync-alt"></i> INVERT LIGHT/DARK AREAS
                     </button>
-                    
                     <div class="cell-style-section">
                         <h4><i class="fas fa-square"></i> BACKGROUND (DARK AREAS)</h4>
                         <div class="control-group">
@@ -112,7 +107,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="cell-style-section">
                         <h4><i class="fas fa-square-full"></i> ELEMENT (LIGHT AREAS)</h4>
                         <div class="control-group">
@@ -178,7 +172,6 @@
                     </div>
                 </div>
             </details>
-            
             <details class="accordion">
                 <summary>
                     <div class="panel-header">
@@ -200,7 +193,6 @@
                     <input type="color" id="bgColor" value="#FFFFFF">
                 </div>
             </details>
-            
             <details class="accordion">
                 <summary>
                     <div class="panel-header">
@@ -213,12 +205,10 @@
                     <div class="grid-info">
                         <span id="gridSizeDisplay">80 x 45</span>
                     </div>
-                    
                     <label for="threshold">BRIGHTNESS THRESHOLD:</label>
                     <input type="range" id="threshold" min="0" max="255" value="128">
                 </div>
             </details>
-            
             <div class="actions">
                 <div class="control-grid">
                     <button id="play-button" disabled class="action-btn">
@@ -228,7 +218,6 @@
                         <i class="fas fa-pause"></i> PAUSE
                     </button>
                 </div>
-                
                 <div class="control-grid">
                     <button id="start-recording" disabled class="action-btn">
                         <i class="fas fa-record-vinyl"></i> RECORD
@@ -237,7 +226,6 @@
                         <i class="fas fa-stop"></i> STOP
                     </button>
                 </div>
-                
                 <div class="control-grid">
                     <button id="apply-effect" class="action-btn">
                         <i class="fas fa-magic"></i> APPLY
@@ -246,12 +234,10 @@
                         <i class="fas fa-undo"></i> RESET
                     </button>
                 </div>
-                
                 <a id="capture-frame" style="display:none;" download="processed_frame.png" class="action-btn">
                     <i class="fas fa-camera"></i> CAPTURE
                 </a>
             </div>
-            
             <div class="credits">
                 <p>CRAFTED BY <strong>SAMMYCABELLO</strong></p>
             </div>
@@ -264,7 +250,6 @@
         </div>
     </div>
     <img id="thumbnail" class="thumbnail" style="display:none;">
-
     <script src="script.js"></script>
 </body>
 </html>
