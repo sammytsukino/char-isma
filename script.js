@@ -33,8 +33,6 @@ const gradient0Color2Input  = document.getElementById('gradient0Color2');
 const gradient0DirectionInput = document.getElementById('gradient0Direction');
 const gradientPreview0Canvas= document.getElementById('gradient-preview-0');
 const ctxGradientPreview0   = gradientPreview0Canvas.getContext('2d');
-const solid0ColorInput      = document.getElementById('solid0Color');
-const solidControlsDark     = document.getElementById('solid-controls-dark');
 
 const char1Input            = document.getElementById('char1');
 const textColor1Input       = document.getElementById('textColor1');
@@ -48,12 +46,10 @@ const gradient1Color2Input  = document.getElementById('gradient1Color2');
 const gradient1DirectionInput = document.getElementById('gradient1Direction');
 const gradientPreview1Canvas= document.getElementById('gradient-preview-1');
 const ctxGradientPreview1   = gradientPreview1Canvas.getContext('2d');
-const solid1ColorInput      = document.getElementById('solid1Color');
-const solidControlsBright   = document.getElementById('solid-controls-bright');
 
 const bgColorInput          = document.getElementById('bgColor');
-const gridSizeInput         = document.getElementById('gridSize');
-const gridSizeDisplay       = document.getElementById('gridSizeDisplay');
+const numColsInput          = document.getElementById('numCols');
+const numRowsInput          = document.getElementById('numRows');
 const thresholdInput        = document.getElementById('threshold');
 const playButton            = document.getElementById('play-button');
 const pauseButton           = document.getElementById('pause-button');
@@ -88,7 +84,6 @@ function resizeCanvas() {
     if (sourceType === 'image' && imageLoaded) {
         drawOriginalImage();
     }
-    updateGridSizeDisplay();
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -316,16 +311,6 @@ function updateGradientPreviews() {
     ctxGradientPreview1.drawImage(grad1, 0, 0, gradientPreview1Canvas.width, gradientPreview1Canvas.height);
 }
 
-function updateGridSizeDisplay() {
-    const gridSize = parseInt(gridSizeInput.value, 10);
-    const aspectRatio = canvas.height / canvas.width;
-    const numCols = gridSize;
-    const numRows = Math.round(gridSize * aspectRatio);
-    gridSizeDisplay.textContent = `${numCols} x ${numRows}`;
-}
-
-gridSizeInput.addEventListener('input', updateGridSizeDisplay);
-
 function drawProcessedEffect() {
      if (!sourceType || (sourceType === 'image' && !imageLoaded)) {
          return;
@@ -374,10 +359,8 @@ function drawProcessedEffect() {
 
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
-    const gridSize = parseInt(gridSizeInput.value, 10);
-    const aspectRatio = canvasHeight / canvasWidth;
-    const numCols = gridSize;
-    const numRows = Math.round(gridSize * aspectRatio);
+    const numCols = parseInt(numColsInput.value, 10) || 80;
+    const numRows = parseInt(numRowsInput.value, 10) || 45;
     const threshold = parseInt(thresholdInput.value, 10) || 128;
     const blockWidth = canvasWidth / numCols;
     const blockHeight = canvasHeight / numRows;
@@ -395,8 +378,6 @@ function drawProcessedEffect() {
     const colorValueDark = textColor0Input.value;
     const charValueBright = char1Input.value || "0";
     const colorValueBright = textColor1Input.value;
-    const solidColorDark = solid0ColorInput.value;
-    const solidColorBright = solid1ColorInput.value;
 
     let gradient0Canvas, gradient1Canvas;
     if (selectedCellTypeDark === 'gradient') {
@@ -460,10 +441,6 @@ function drawProcessedEffect() {
                             ctx.fillRect(startX, startY, cellW, cellH);
                          }
                          break;
-                    case 'solid':
-                        ctx.fillStyle = solidColorBright;
-                        ctx.fillRect(startX, startY, cellW, cellH);
-                        break;
                 }
             } else {
                 switch (selectedCellTypeDark) {
@@ -487,10 +464,6 @@ function drawProcessedEffect() {
                             ctx.fillRect(startX, startY, cellW, cellH);
                          }
                          break;
-                    case 'solid':
-                        ctx.fillStyle = solidColorDark;
-                        ctx.fillRect(startX, startY, cellW, cellH);
-                        break;
                 }
             }
         }
@@ -638,9 +611,9 @@ function resetApp() {
     icon1Image = new Image();
 
     document.querySelector('input[name="cellTypeDark"][value="character"]').checked = true;
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
     document.querySelector('input[name="cellTypeBright"][value="character"]').checked = true;
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
 
     char0Input.value = "1";
     char1Input.value = "0";
@@ -653,12 +626,10 @@ function resetApp() {
     gradient1Color1Input.value = "#00ff00";
     gradient1Color2Input.value = "#0000ff";
     gradient1DirectionInput.value = "horizontal";
-    solid0ColorInput.value = "#000000";
-    solid1ColorInput.value = "#ffffff";
     updateGradientPreviews();
 
-    gridSizeInput.value = 80;
-    updateGridSizeDisplay();
+    numColsInput.value = 80;
+    numRowsInput.value = 45;
     thresholdInput.value = 128;
 
     captureFrameLink.style.display = 'none';
@@ -675,19 +646,17 @@ function resetApp() {
 }
 resetButton.addEventListener('click', resetApp);
 
-function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gradControlsId, solidControlsId) {
+function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gradControlsId) {
     const radios = document.querySelectorAll(`input[name="${radioGroupName}"]`);
     const charControls = document.getElementById(charControlsId);
     const iconControls = document.getElementById(iconControlsId);
     const gradControls = document.getElementById(gradControlsId);
-    const solidControls = document.getElementById(solidControlsId);
 
     radios.forEach(radio => {
         radio.addEventListener('change', function() {
             charControls.style.display = 'none';
             iconControls.style.display = 'none';
             gradControls.style.display = 'none';
-            solidControls.style.display = 'none';
             if (this.value === 'character') {
                 charControls.style.display = 'block';
             } else if (this.value === 'icon') {
@@ -695,8 +664,6 @@ function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gra
             } else if (this.value === 'gradient') {
                 gradControls.style.display = 'block';
                 updateGradientPreviews();
-            } else if (this.value === 'solid') {
-                solidControls.style.display = 'block';
             }
         });
     });
@@ -705,18 +672,16 @@ function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gra
          charControls.style.display = checkedRadio.value === 'character' ? 'block' : 'none';
          iconControls.style.display = checkedRadio.value === 'icon' ? 'block' : 'none';
          gradControls.style.display = checkedRadio.value === 'gradient' ? 'block' : 'none';
-         solidControls.style.display = checkedRadio.value === 'solid' ? 'block' : 'none';
          if (checkedRadio.value === 'gradient') updateGradientPreviews();
      } else {
          charControls.style.display = 'none';
          iconControls.style.display = 'none';
          gradControls.style.display = 'none';
-         solidControls.style.display = 'none';
      }
 }
 
-setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
-setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
+setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
 
 gradient0Color1Input.addEventListener('input', updateGradientPreviews);
 gradient0Color2Input.addEventListener('input', updateGradientPreviews);
@@ -760,9 +725,6 @@ function invertCellStyles() {
         direction: gradient1DirectionInput.value
     };
     
-    const solidDarkColor = solid0ColorInput.value;
-    const solidBrightColor = solid1ColorInput.value;
-    
     document.querySelector(`input[name="cellTypeDark"][value="${brightType}"]`).checked = true;
     document.querySelector(`input[name="cellTypeBright"][value="${darkType}"]`).checked = true;
     
@@ -780,9 +742,6 @@ function invertCellStyles() {
     gradient1Color2Input.value = darkGradient.color2;
     gradient1DirectionInput.value = darkGradient.direction;
     
-    solid0ColorInput.value = solidBrightColor;
-    solid1ColorInput.value = solidDarkColor;
-    
     updateGradientPreviews();
     
     const tempImage = icon0Image;
@@ -793,8 +752,8 @@ function invertCellStyles() {
     icon0Loaded = icon1Loaded;
     icon1Loaded = tempLoaded;
     
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
     
     if (sourceType === 'image' && imageLoaded) {
         drawProcessedEffect();
@@ -966,15 +925,14 @@ stopRecordingButton.addEventListener('click', stopRecording);
 
 document.addEventListener("DOMContentLoaded", () => {
     updateGradientPreviews();
-    updateGridSizeDisplay();
     playButton.disabled = true;
     pauseButton.disabled = true;
     captureFrameLink.style.display = 'none';
     applyButton.disabled = false;
     startRecordingButton.disabled = true;
     stopRecordingButton.disabled = true;
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
     resizeCanvas();
 });
 

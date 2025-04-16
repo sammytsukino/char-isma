@@ -422,20 +422,6 @@ legend {
   margin-right: 6px;
 }
 
-.grid-info {
-  margin-top: 4px;
-  margin-bottom: 16px;
-  padding: 8px;
-  border: 2px solid #000000;
-  text-align: center;
-  font-weight: bold;
-}
-
-#gridSizeDisplay {
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
 @media (max-width: 768px) {
   .controls {
     width: 100%;
