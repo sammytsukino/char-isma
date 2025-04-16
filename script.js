@@ -33,6 +33,8 @@ const gradient0Color2Input  = document.getElementById('gradient0Color2');
 const gradient0DirectionInput = document.getElementById('gradient0Direction');
 const gradientPreview0Canvas= document.getElementById('gradient-preview-0');
 const ctxGradientPreview0   = gradientPreview0Canvas.getContext('2d');
+const solid0ColorInput      = document.getElementById('solid0Color');
+const solidControlsDark     = document.getElementById('solid-controls-dark');
 
 const char1Input            = document.getElementById('char1');
 const textColor1Input       = document.getElementById('textColor1');
@@ -46,10 +48,12 @@ const gradient1Color2Input  = document.getElementById('gradient1Color2');
 const gradient1DirectionInput = document.getElementById('gradient1Direction');
 const gradientPreview1Canvas= document.getElementById('gradient-preview-1');
 const ctxGradientPreview1   = gradientPreview1Canvas.getContext('2d');
+const solid1ColorInput      = document.getElementById('solid1Color');
+const solidControlsBright   = document.getElementById('solid-controls-bright');
 
 const bgColorInput          = document.getElementById('bgColor');
-const numColsInput          = document.getElementById('numCols');
-const numRowsInput          = document.getElementById('numRows');
+const gridSizeInput         = document.getElementById('gridSize');
+const gridSizeDisplay       = document.getElementById('gridSizeDisplay');
 const thresholdInput        = document.getElementById('threshold');
 const playButton            = document.getElementById('play-button');
 const pauseButton           = document.getElementById('pause-button');
@@ -78,12 +82,85 @@ let recordedChunks = [];
 const tempCanvas = document.createElement('canvas');
 const tempCtx = tempCanvas.getContext('2d');
 
+let canvasAspectRatio = 16 / 9; // Proporción predeterminada
+let sourceWidth = 0;
+let sourceHeight = 0;
+
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const isMobile = window.innerWidth <= 768;
+    let availableWidth, availableHeight;
+    
+    if (isMobile) {
+        availableWidth = window.innerWidth;
+        availableHeight = window.innerHeight * 0.4;
+    } else {
+        availableWidth = window.innerWidth - 300;
+        availableHeight = window.innerHeight;
+    }
+    
+    // Si tenemos contenido cargado, usar su aspect ratio
+    if ((sourceType === 'image' && imageLoaded) || 
+        (sourceType === 'video' || sourceType === 'webcam') && sourceVideo.readyState >= 2) {
+        
+        if (sourceType === 'image') {
+            canvasAspectRatio = originalImage.width / originalImage.height;
+            sourceWidth = originalImage.width;
+            sourceHeight = originalImage.height;
+        } else {
+            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
+            sourceWidth = sourceVideo.videoWidth;
+            sourceHeight = sourceVideo.videoHeight;
+        }
+    }
+    
+    let canvasWidth, canvasHeight;
+    const containerAspect = availableWidth / availableHeight;
+    
+    // Determinar si ajustar por ancho o alto
+    if (containerAspect > canvasAspectRatio) {
+        // Contenedor más ancho que el contenido: ajustar por altura
+        canvasHeight = availableHeight;
+        canvasWidth = canvasHeight * canvasAspectRatio;
+    } else {
+        // Contenedor más alto que el contenido: ajustar por ancho
+        canvasWidth = availableWidth;
+        canvasHeight = canvasWidth / canvasAspectRatio;
+    }
+    
+    // Establecer dimensiones del canvas visibles para el usuario
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+    
+    // MODIFICACIÓN: Garantizar resolución mínima para la calidad de salida
+    // Usar un multiplicador para mantener la resolución alta independientemente del tamaño de la imagen original
+    let minHeight = window.innerHeight;
+    let minWidth = Math.ceil(minHeight * canvasAspectRatio);
+    
+    if (sourceWidth > 0 && sourceHeight > 0) {
+        // Usar el tamaño original como referencia pero garantizando una altura mínima
+        canvas.width = Math.max(sourceWidth, minWidth);
+        canvas.height = Math.max(sourceHeight, minHeight);
+        
+        // Mantener la relación de aspecto
+        if (canvas.width / canvas.height !== canvasAspectRatio) {
+            if (canvas.width / canvas.height > canvasAspectRatio) {
+                canvas.width = Math.ceil(canvas.height * canvasAspectRatio);
+            } else {
+                canvas.height = Math.ceil(canvas.width / canvasAspectRatio);
+            }
+        }
+    } else {
+        // Si no hay contenido, usar dimensiones proporcionales con calidad alta
+        canvas.width = minWidth;
+        canvas.height = minHeight;
+    }
+    
+    console.log(`Canvas redimensionado a: ${canvas.width}x${canvas.height} (visual: ${canvasWidth}x${canvasHeight})`);
+    
     if (sourceType === 'image' && imageLoaded) {
         drawOriginalImage();
     }
+    updateGridSizeDisplay();
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -145,6 +222,13 @@ mediaInput.addEventListener('change', (event) => {
             thumbnail.src = fileURL;
             thumbnail.style.display = 'block';
             console.log("Imagen cargada:", file.name);
+            
+            // Actualizar el aspect ratio y redimensionar el canvas
+            canvasAspectRatio = originalImage.width / originalImage.height;
+            sourceWidth = originalImage.width;
+            sourceHeight = originalImage.height;
+            resizeCanvas();
+            
             drawOriginalImage();
             applyButton.disabled = false;
             playButton.disabled = true;
@@ -167,6 +251,13 @@ mediaInput.addEventListener('change', (event) => {
 
         sourceVideo.onloadedmetadata = () => {
             console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
+            
+            // Actualizar aspect ratio y redimensionar el canvas
+            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
+            sourceWidth = sourceVideo.videoWidth;
+            sourceHeight = sourceVideo.videoHeight;
+            resizeCanvas();
+            
             tempCanvas.width = sourceVideo.videoWidth;
             tempCanvas.height = sourceVideo.videoHeight;
         };
@@ -224,6 +315,13 @@ useWebcamButton.addEventListener('click', async () => {
 
         sourceVideo.onloadedmetadata = () => {
             console.log("Stream de webcam iniciado. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
+            
+            // Actualizar aspect ratio y redimensionar el canvas
+            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
+            sourceWidth = sourceVideo.videoWidth;
+            sourceHeight = sourceVideo.videoHeight;
+            resizeCanvas();
+            
             tempCanvas.width = sourceVideo.videoWidth;
             tempCanvas.height = sourceVideo.videoHeight;
             sourceVideo.play();
@@ -238,50 +336,15 @@ useWebcamButton.addEventListener('click', async () => {
 
 function drawOriginalImage() {
     if (!imageLoaded || sourceType !== 'image') return;
-    const width = canvas.width;
-    const height = canvas.height;
-    ctx.clearRect(0, 0, width, height);
-    const imgWidth = originalImage.width;
-    const imgHeight = originalImage.height;
-    let drawWidth, drawHeight, offsetX, offsetY;
-    const canvasAspect = width / height;
-    const imgAspect = imgWidth / imgHeight;
-
-    if (imgAspect > canvasAspect) {
-        drawWidth = width;
-        drawHeight = drawWidth / imgAspect;
-        offsetX = 0;
-        offsetY = (height - drawHeight) / 2;
-    } else {
-        drawHeight = height;
-        drawWidth = drawHeight * imgAspect;
-        offsetY = 0;
-        offsetX = (width - drawWidth) / 2;
-    }
-    ctx.drawImage(originalImage, offsetX, offsetY, drawWidth, drawHeight);
-    console.log("Imagen original dibujada en canvas.");
+    
+    // Limpiar el canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Dibujar la imagen en todo el canvas
+    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+    
+    console.log("Imagen original dibujada en canvas respetando proporciones.");
 }
-
-icon0Input.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        icon0Loaded = false;
-        icon0Image = new Image();
-        icon0Image.onload = () => { icon0Loaded = true; console.log("Icono Fondo (0) cargado"); };
-        icon0Image.onerror = () => { icon0Loaded = false; console.error("Error al cargar icono Fondo (0)"); };
-        icon0Image.src = URL.createObjectURL(file);
-    }
-});
-icon1Input.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        icon1Loaded = false;
-        icon1Image = new Image();
-        icon1Image.onload = () => { icon1Loaded = true; console.log("Icono Elemento (1) cargado"); };
-        icon1Image.onerror = () => { icon1Loaded = false; console.error("Error al cargar icono Elemento (1)"); };
-        icon1Image.src = URL.createObjectURL(file);
-    }
-});
 
 function generateGradient(colorStart, colorEnd, direction) {
     const gradCanvas = document.createElement('canvas');
@@ -311,19 +374,83 @@ function updateGradientPreviews() {
     ctxGradientPreview1.drawImage(grad1, 0, 0, gradientPreview1Canvas.width, gradientPreview1Canvas.height);
 }
 
+function updateGridSizeDisplay() {
+    const gridSize = parseInt(gridSizeInput.value, 10);
+    const aspectRatio = canvas.height / canvas.width;
+    const numCols = gridSize;
+    const numRows = Math.round(gridSize * aspectRatio);
+    gridSizeDisplay.textContent = `${numCols} x ${numRows}`;
+}
+
+gridSizeInput.addEventListener('input', updateGridSizeDisplay);
+
+// Añadir manejadores de eventos para la carga de íconos
+icon0Input.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const fileURL = URL.createObjectURL(file);
+    icon0Image = new Image();
+    icon0Loaded = false;
+    
+    icon0Image.onload = function() {
+        icon0Loaded = true;
+        console.log("Icono oscuro cargado correctamente");
+    };
+    
+    icon0Image.onerror = function() {
+        console.error("Error al cargar el icono oscuro");
+        icon0Loaded = false;
+    };
+    
+    icon0Image.src = fileURL;
+    
+    // Si estamos en modo imagen y ya tenemos una imagen cargada, actualizamos el efecto
+    if (sourceType === 'image' && imageLoaded) {
+        drawProcessedEffect();
+    }
+});
+
+icon1Input.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const fileURL = URL.createObjectURL(file);
+    icon1Image = new Image();
+    icon1Loaded = false;
+    
+    icon1Image.onload = function() {
+        icon1Loaded = true;
+        console.log("Icono claro cargado correctamente");
+    };
+    
+    icon1Image.onerror = function() {
+        console.error("Error al cargar el icono claro");
+        icon1Loaded = false;
+    };
+    
+    icon1Image.src = fileURL;
+    
+    // Si estamos en modo imagen y ya tenemos una imagen cargada, actualizamos el efecto
+    if (sourceType === 'image' && imageLoaded) {
+        drawProcessedEffect();
+    }
+});
+
 function drawProcessedEffect() {
      if (!sourceType || (sourceType === 'image' && !imageLoaded)) {
          return;
      }
+     
+     // Obtener los datos de origen para el procesamiento
      let sourceData;
-     let sourceWidth, sourceHeight;
-
+     
      if (sourceType === 'image') {
-         tempCanvas.width = originalImage.width;
-         tempCanvas.height = originalImage.height;
-         tempCtx.drawImage(originalImage, 0, 0);
-         sourceWidth = originalImage.width;
-         sourceHeight = originalImage.height;
+         tempCanvas.width = canvas.width;
+         tempCanvas.height = canvas.height;
+         tempCtx.drawImage(originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
+         sourceWidth = tempCanvas.width;
+         sourceHeight = tempCanvas.height;
          try {
             sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
          } catch (e) {
@@ -337,14 +464,15 @@ function drawProcessedEffect() {
          if (!isVideoPlaying || sourceVideo.paused || sourceVideo.ended || sourceVideo.readyState < 3) {
              return;
          }
-         if (tempCanvas.width !== sourceVideo.videoWidth || tempCanvas.height !== sourceVideo.videoHeight) {
-             tempCanvas.width = sourceVideo.videoWidth;
-             tempCanvas.height = sourceVideo.videoHeight;
-             console.log("Ajustando tamaño de tempCanvas a:", tempCanvas.width, "x", tempCanvas.height);
-         }
+         
+         tempCanvas.width = canvas.width;
+         tempCanvas.height = canvas.height;
+         
+         // Dibujar el video manteniendo proporciones
          tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
          sourceWidth = tempCanvas.width;
          sourceHeight = tempCanvas.height;
+         
          try {
              sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
          } catch (e) {
@@ -359,8 +487,10 @@ function drawProcessedEffect() {
 
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
-    const numCols = parseInt(numColsInput.value, 10) || 80;
-    const numRows = parseInt(numRowsInput.value, 10) || 45;
+    const gridSize = parseInt(gridSizeInput.value, 10);
+    const aspectRatio = canvasHeight / canvasWidth;
+    const numCols = gridSize;
+    const numRows = Math.round(gridSize * aspectRatio);
     const threshold = parseInt(thresholdInput.value, 10) || 128;
     const blockWidth = canvasWidth / numCols;
     const blockHeight = canvasHeight / numRows;
@@ -378,6 +508,8 @@ function drawProcessedEffect() {
     const colorValueDark = textColor0Input.value;
     const charValueBright = char1Input.value || "0";
     const colorValueBright = textColor1Input.value;
+    const solidColorDark = solid0ColorInput.value;
+    const solidColorBright = solid1ColorInput.value;
 
     let gradient0Canvas, gradient1Canvas;
     if (selectedCellTypeDark === 'gradient') {
@@ -441,6 +573,10 @@ function drawProcessedEffect() {
                             ctx.fillRect(startX, startY, cellW, cellH);
                          }
                          break;
+                    case 'solid':
+                        ctx.fillStyle = solidColorBright;
+                        ctx.fillRect(startX, startY, cellW, cellH);
+                        break;
                 }
             } else {
                 switch (selectedCellTypeDark) {
@@ -464,6 +600,10 @@ function drawProcessedEffect() {
                             ctx.fillRect(startX, startY, cellW, cellH);
                          }
                          break;
+                    case 'solid':
+                        ctx.fillStyle = solidColorDark;
+                        ctx.fillRect(startX, startY, cellW, cellH);
+                        break;
                 }
             }
         }
@@ -611,9 +751,9 @@ function resetApp() {
     icon1Image = new Image();
 
     document.querySelector('input[name="cellTypeDark"][value="character"]').checked = true;
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
     document.querySelector('input[name="cellTypeBright"][value="character"]').checked = true;
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
 
     char0Input.value = "1";
     char1Input.value = "0";
@@ -626,10 +766,12 @@ function resetApp() {
     gradient1Color1Input.value = "#00ff00";
     gradient1Color2Input.value = "#0000ff";
     gradient1DirectionInput.value = "horizontal";
+    solid0ColorInput.value = "#000000";
+    solid1ColorInput.value = "#ffffff";
     updateGradientPreviews();
 
-    numColsInput.value = 80;
-    numRowsInput.value = 45;
+    gridSizeInput.value = 80;
+    updateGridSizeDisplay();
     thresholdInput.value = 128;
 
     captureFrameLink.style.display = 'none';
@@ -646,17 +788,19 @@ function resetApp() {
 }
 resetButton.addEventListener('click', resetApp);
 
-function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gradControlsId) {
+function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gradControlsId, solidControlsId) {
     const radios = document.querySelectorAll(`input[name="${radioGroupName}"]`);
     const charControls = document.getElementById(charControlsId);
     const iconControls = document.getElementById(iconControlsId);
     const gradControls = document.getElementById(gradControlsId);
+    const solidControls = document.getElementById(solidControlsId);
 
     radios.forEach(radio => {
         radio.addEventListener('change', function() {
             charControls.style.display = 'none';
             iconControls.style.display = 'none';
             gradControls.style.display = 'none';
+            solidControls.style.display = 'none';
             if (this.value === 'character') {
                 charControls.style.display = 'block';
             } else if (this.value === 'icon') {
@@ -664,6 +808,8 @@ function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gra
             } else if (this.value === 'gradient') {
                 gradControls.style.display = 'block';
                 updateGradientPreviews();
+            } else if (this.value === 'solid') {
+                solidControls.style.display = 'block';
             }
         });
     });
@@ -672,16 +818,18 @@ function setupCellTypeToggle(radioGroupName, charControlsId, iconControlsId, gra
          charControls.style.display = checkedRadio.value === 'character' ? 'block' : 'none';
          iconControls.style.display = checkedRadio.value === 'icon' ? 'block' : 'none';
          gradControls.style.display = checkedRadio.value === 'gradient' ? 'block' : 'none';
+         solidControls.style.display = checkedRadio.value === 'solid' ? 'block' : 'none';
          if (checkedRadio.value === 'gradient') updateGradientPreviews();
      } else {
          charControls.style.display = 'none';
          iconControls.style.display = 'none';
          gradControls.style.display = 'none';
+         solidControls.style.display = 'none';
      }
 }
 
-setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
-setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
+setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
 
 gradient0Color1Input.addEventListener('input', updateGradientPreviews);
 gradient0Color2Input.addEventListener('input', updateGradientPreviews);
@@ -725,6 +873,9 @@ function invertCellStyles() {
         direction: gradient1DirectionInput.value
     };
     
+    const solidDarkColor = solid0ColorInput.value;
+    const solidBrightColor = solid1ColorInput.value;
+    
     document.querySelector(`input[name="cellTypeDark"][value="${brightType}"]`).checked = true;
     document.querySelector(`input[name="cellTypeBright"][value="${darkType}"]`).checked = true;
     
@@ -742,6 +893,9 @@ function invertCellStyles() {
     gradient1Color2Input.value = darkGradient.color2;
     gradient1DirectionInput.value = darkGradient.direction;
     
+    solid0ColorInput.value = solidBrightColor;
+    solid1ColorInput.value = solidDarkColor;
+    
     updateGradientPreviews();
     
     const tempImage = icon0Image;
@@ -752,8 +906,8 @@ function invertCellStyles() {
     icon0Loaded = icon1Loaded;
     icon1Loaded = tempLoaded;
     
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     
     if (sourceType === 'image' && imageLoaded) {
         drawProcessedEffect();
@@ -925,14 +1079,15 @@ stopRecordingButton.addEventListener('click', stopRecording);
 
 document.addEventListener("DOMContentLoaded", () => {
     updateGradientPreviews();
+    updateGridSizeDisplay();
     playButton.disabled = true;
     pauseButton.disabled = true;
     captureFrameLink.style.display = 'none';
     applyButton.disabled = false;
     startRecordingButton.disabled = true;
     stopRecordingButton.disabled = true;
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark');
-    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright');
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     resizeCanvas();
 });
 

@@ -22,8 +22,8 @@ html, body {
 #canvas {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 300px; /* Modificado: antes era 0, ahora empieza después de los controles */
+  width: calc(100% - 300px); /* Modificado: ahora ocupa el resto de la pantalla */
   height: 100%;
   z-index: 1;
 }
@@ -422,6 +422,20 @@ legend {
   margin-right: 6px;
 }
 
+.grid-info {
+  margin-top: 4px;
+  margin-bottom: 16px;
+  padding: 8px;
+  border: 2px solid #000000;
+  text-align: center;
+  font-weight: bold;
+}
+
+#gridSizeDisplay {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
 @media (max-width: 768px) {
   .controls {
     width: 100%;
@@ -435,6 +449,15 @@ legend {
   
   .thumbnail {
     display: none !important;
+  }
+
+  #canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 60vh); /* La altura depende del espacio que ocupen los controles */
+    z-index: 1;
   }
 }
 
