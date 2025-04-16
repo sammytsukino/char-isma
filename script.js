@@ -610,11 +610,18 @@ function drawProcessedEffect() {
     }
     if (sourceType === 'image' || sourceType === 'video' || sourceType === 'webcam') {
         captureFrameLink.style.display = 'inline-block';
-        if (sourceType === 'image') {
-             captureFrameLink.href = canvas.toDataURL('image/png');
-             captureFrameLink.download = 'processed_image.png';
+        captureFrameLink.href = '#'; // Cambiar a # para manejar con evento click personalizado
+        captureFrameLink.textContent = 'CAPTURE IN HIGH-RES'; // Opcionalmente, actualizar el texto del botón
+        
+        // Actualizar icono si es necesario
+        const iconElement = captureFrameLink.querySelector('i');
+        if (iconElement) {
+            iconElement.className = 'fas fa-camera';
         } else {
-             captureFrameLink.download = 'processed_frame.png';
+            const newIcon = document.createElement('i');
+            newIcon.className = 'fas fa-camera';
+            captureFrameLink.insertBefore(newIcon, captureFrameLink.firstChild);
+            captureFrameLink.innerHTML = captureFrameLink.innerHTML + ' CAPTURE IN HIGH-RES';
         }
     }
 }
@@ -717,13 +724,247 @@ applyButton.addEventListener('click', () => {
 });
 
 captureFrameLink.addEventListener('click', (event) => {
-    if (sourceType === 'video' || sourceType === 'webcam') {
-        console.log("Capturando fotograma actual del canvas...");
-        event.currentTarget.href = canvas.toDataURL('image/png');
-    } else if (sourceType === 'image') {
-        console.log("Descargando imagen procesada...");
+    if (sourceType === 'video' || sourceType === 'webcam' || sourceType === 'image') {
+        console.log("Capturando fotograma en alta resolución...");
+        
+        // Evitar la acción predeterminada para generar la imagen en alta resolución
+        event.preventDefault();
+        
+        // Crear un canvas temporal con el doble de tamaño
+        const hiResCanvas = document.createElement('canvas');
+        hiResCanvas.width = canvas.width * 2;
+        hiResCanvas.height = canvas.height * 2;
+        const hiResCtx = hiResCanvas.getContext('2d');
+        
+        // Configurar el contexto de alta resolución igual que el original
+        hiResCtx.fillStyle = bgColorInput.value;
+        hiResCtx.fillRect(0, 0, hiResCanvas.width, hiResCanvas.height);
+        hiResCtx.font = `${Math.min(canvas.width/parseInt(gridSizeInput.value), canvas.height/(parseInt(gridSizeInput.value) * canvas.height/canvas.width)) * 0.9 * 2}px monospace`;
+        hiResCtx.textBaseline = "top";
+        hiResCtx.textAlign = "left";
+        hiResCtx.imageSmoothingEnabled = false;
+        
+        // Generar la imagen de alta resolución con los mismos ajustes
+        renderHighResolutionImage(hiResCanvas, hiResCtx);
+        
+        // Obtener la URL de la imagen y forzar la descarga
+        const hiResUrl = hiResCanvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = hiResUrl;
+        a.download = sourceType === 'image' ? 'processed_image_hires.png' : 'processed_frame_hires.png';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(hiResUrl);
+        }, 100);
     }
 });
+
+function renderHighResolutionImage(hiResCanvas, hiResCtx) {
+    if (!sourceType || (sourceType === 'image' && !imageLoaded)) {
+        return;
+    }
+    
+    // Obtener los datos de origen para el procesamiento
+    let sourceData;
+    let sourceWidth, sourceHeight;
+    
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (sourceType === 'image') {
+        tempCanvas.width = originalImage.width;
+        tempCanvas.height = originalImage.height;
+        tempCtx.drawImage(originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
+        sourceWidth = tempCanvas.width;
+        sourceHeight = tempCanvas.height;
+    } else if (sourceType === 'video' || sourceType === 'webcam') {
+        tempCanvas.width = sourceVideo.videoWidth;
+        tempCanvas.height = sourceVideo.videoHeight;
+        tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+        sourceWidth = tempCanvas.width;
+        sourceHeight = tempCanvas.height;
+    }
+    
+    try {
+        sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
+    } catch (e) {
+        console.error("Error obteniendo ImageData para versión de alta resolución:", e);
+        return;
+    }
+
+    const canvasWidth = hiResCanvas.width;
+    const canvasHeight = hiResCanvas.height;
+    const gridSize = parseInt(gridSizeInput.value, 10);
+    const aspectRatio = canvasHeight / canvasWidth;
+    const numCols = gridSize;
+    const numRows = Math.round(gridSize * aspectRatio);
+    const threshold = parseInt(thresholdInput.value, 10) || 128;
+    const blockWidth = canvasWidth / numCols;
+    const blockHeight = canvasHeight / numRows;
+
+    hiResCtx.fillStyle = bgColorInput.value;
+    hiResCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+    hiResCtx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px monospace`;
+    hiResCtx.textBaseline = "top";
+    hiResCtx.textAlign = "left";
+    hiResCtx.imageSmoothingEnabled = false;
+
+    const selectedCellTypeDark = document.querySelector('input[name="cellTypeDark"]:checked').value;
+    const selectedCellTypeBright = document.querySelector('input[name="cellTypeBright"]:checked').value;
+    const charValueDark = char0Input.value || "1";
+    const colorValueDark = textColor0Input.value;
+    const charValueBright = char1Input.value || "0";
+    const colorValueBright = textColor1Input.value;
+    const solidColorDark = solid0ColorInput.value;
+    const solidColorBright = solid1ColorInput.value;
+
+    let gradient0Canvas, gradient1Canvas;
+    if (selectedCellTypeDark === 'gradient') {
+        const tmpGradientCanvas = document.createElement('canvas');
+        const tmpGradCtx = tmpGradientCanvas.getContext('2d');
+        tmpGradientCanvas.width = gradientSize * 2;
+        tmpGradientCanvas.height = gradientSize * 2;
+        let gradient;
+        const dir = gradient0DirectionInput.value;
+        switch (dir) {
+            case "horizontal": gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, 0); break;
+            case "vertical": gradient = tmpGradCtx.createLinearGradient(0, 0, 0, tmpGradientCanvas.height); break;
+            case "diagonal": gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, tmpGradientCanvas.height); break;
+            default: gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, 0); break;
+        }
+        gradient.addColorStop(0, gradient0Color1Input.value);
+        gradient.addColorStop(1, gradient0Color2Input.value);
+        tmpGradCtx.fillStyle = gradient;
+        tmpGradCtx.fillRect(0, 0, tmpGradientCanvas.width, tmpGradientCanvas.height);
+        gradient0Canvas = tmpGradientCanvas;
+    }
+    
+    if (selectedCellTypeBright === 'gradient') {
+        const tmpGradientCanvas = document.createElement('canvas');
+        const tmpGradCtx = tmpGradientCanvas.getContext('2d');
+        tmpGradientCanvas.width = gradientSize * 2;
+        tmpGradientCanvas.height = gradientSize * 2;
+        let gradient;
+        const dir = gradient1DirectionInput.value;
+        switch (dir) {
+            case "horizontal": gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, 0); break;
+            case "vertical": gradient = tmpGradCtx.createLinearGradient(0, 0, 0, tmpGradientCanvas.height); break;
+            case "diagonal": gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, tmpGradientCanvas.height); break;
+            default: gradient = tmpGradCtx.createLinearGradient(0, 0, tmpGradientCanvas.width, 0); break;
+        }
+        gradient.addColorStop(0, gradient1Color1Input.value);
+        gradient.addColorStop(1, gradient1Color2Input.value);
+        tmpGradCtx.fillStyle = gradient;
+        tmpGradCtx.fillRect(0, 0, tmpGradientCanvas.width, tmpGradientCanvas.height);
+        gradient1Canvas = tmpGradientCanvas;
+    }
+
+    // Crear versiones de alta resolución para los iconos si se usan
+    let hiResIcon0Image, hiResIcon1Image;
+    if (selectedCellTypeDark === 'icon' && icon0Loaded) {
+        hiResIcon0Image = new Image();
+        hiResIcon0Image.src = icon0Image.src;
+    }
+    
+    if (selectedCellTypeBright === 'icon' && icon1Loaded) {
+        hiResIcon1Image = new Image();
+        hiResIcon1Image.src = icon1Image.src;
+    }
+
+    for (let row = 0; row < numRows; row++) {
+        const startY = Math.round(row * blockHeight);
+        const cellH = Math.round((row + 1) * blockHeight) - startY;
+
+        for (let col = 0; col < numCols; col++) {
+            const startX = Math.round(col * blockWidth);
+            const cellW = Math.round((col + 1) * blockWidth) - startX;
+
+            // Calcular la región correspondiente en la imagen fuente
+            const sourceStartX = Math.floor(col * (sourceWidth / numCols));
+            const sourceEndX = Math.floor((col + 1) * (sourceWidth / numCols));
+            const sourceStartY = Math.floor(row * (sourceHeight / numRows));
+            const sourceEndY = Math.floor((row + 1) * (sourceHeight / numRows));
+
+            let totalBrightness = 0;
+            let pixelCount = 0;
+
+            // Calcular la luminosidad media de la región
+            for (let y = sourceStartY; y < sourceEndY; y++) {
+                for (let x = sourceStartX; x < sourceEndX; x++) {
+                    const index = (y * sourceWidth + x) * 4;
+                    if (index < sourceData.length - 3) {
+                        const r = sourceData[index];
+                        const g = sourceData[index + 1];
+                        const b = sourceData[index + 2];
+                        const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                        totalBrightness += brightness;
+                        pixelCount++;
+                    }
+                }
+            }
+
+            const avgBrightness = pixelCount > 0 ? totalBrightness / pixelCount : 0;
+
+            if (avgBrightness > threshold) {
+                switch (selectedCellTypeBright) {
+                    case 'character':
+                        hiResCtx.fillStyle = colorValueBright;
+                        hiResCtx.fillText(charValueBright, startX, startY);
+                        break;
+                    case 'icon':
+                        if (icon1Loaded) {
+                            hiResCtx.drawImage(hiResIcon1Image || icon1Image, startX, startY, cellW, cellH);
+                        } else {
+                            hiResCtx.fillStyle = colorValueBright;
+                            hiResCtx.fillText(charValueBright, startX, startY);
+                        }
+                        break;
+                    case 'gradient':
+                         if (gradient1Canvas) {
+                             hiResCtx.drawImage(gradient1Canvas, startX, startY, cellW, cellH);
+                         } else {
+                            hiResCtx.fillStyle = colorValueBright;
+                            hiResCtx.fillRect(startX, startY, cellW, cellH);
+                         }
+                         break;
+                    case 'solid':
+                        hiResCtx.fillStyle = solidColorBright;
+                        hiResCtx.fillRect(startX, startY, cellW, cellH);
+                        break;
+                }
+            } else {
+                switch (selectedCellTypeDark) {
+                    case 'character':
+                        hiResCtx.fillStyle = colorValueDark;
+                        hiResCtx.fillText(charValueDark, startX, startY);
+                        break;
+                    case 'icon':
+                        if (icon0Loaded) {
+                            hiResCtx.drawImage(hiResIcon0Image || icon0Image, startX, startY, cellW, cellH);
+                        } else {
+                            hiResCtx.fillStyle = colorValueDark;
+                            hiResCtx.fillText(charValueDark, startX, startY);
+                        }
+                        break;
+                    case 'gradient':
+                         if (gradient0Canvas) {
+                             hiResCtx.drawImage(gradient0Canvas, startX, startY, cellW, cellH);
+                         } else {
+                            hiResCtx.fillStyle = colorValueDark;
+                            hiResCtx.fillRect(startX, startY, cellW, cellH);
+                         }
+                         break;
+                    case 'solid':
+                        hiResCtx.fillStyle = solidColorDark;
+                        hiResCtx.fillRect(startX, startY, cellW, cellH);
+                        break;
+                }
+            }
+        }
+    }
+}
 
 function resetApp() {
     console.log("Reseteando aplicación...");
