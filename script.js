@@ -83,16 +83,8 @@ const tempCanvas = document.createElement('canvas');
 const tempCtx = tempCanvas.getContext('2d');
 
 function resizeCanvas() {
-    const isMobile = window.innerWidth <= 768;
-    
-    if (isMobile) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight * 0.4;
-    } else {
-        canvas.width = window.innerWidth - 300;
-        canvas.height = window.innerHeight;
-    }
-    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     if (sourceType === 'image' && imageLoaded) {
         drawOriginalImage();
     }

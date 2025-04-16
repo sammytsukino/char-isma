@@ -22,8 +22,8 @@ html, body {
 #canvas {
   position: fixed;
   top: 0;
-  left: 300px; /* Modificado: antes era 0, ahora empieza después de los controles */
-  width: calc(100% - 300px); /* Modificado: ahora ocupa el resto de la pantalla */
+  left: 0;
+  width: 100%;
   height: 100%;
   z-index: 1;
 }
@@ -449,15 +449,6 @@ legend {
   
   .thumbnail {
     display: none !important;
-  }
-
-  #canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: calc(100% - 60vh); /* La altura depende del espacio que ocupen los controles */
-    z-index: 1;
   }
 }
 
