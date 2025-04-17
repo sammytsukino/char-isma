@@ -20,6 +20,7 @@ const applyButton           = document.getElementById('apply-effect');
 const resetButton           = document.getElementById('reset-effect');
 const captureFrameLink      = document.getElementById('capture-frame');
 const thumbnail             = document.getElementById('thumbnail');
+const videoThumbnail        = document.getElementById('video-thumbnail');
 
 const char0Input            = document.getElementById('char0');
 const textColor0Input       = document.getElementById('textColor0');
@@ -191,6 +192,12 @@ function stopCurrentSource() {
     stopRecordingButton.textContent = "STOP & DOWNLOAD";
     applyButton.disabled = false;
 
+    thumbnail.style.display = 'none';
+    videoThumbnail.style.display = 'none';
+    videoThumbnail.pause();
+    videoThumbnail.srcObject = null;
+    videoThumbnail.src = '';
+
     console.log("Fuente de vídeo detenida y limpiada.");
 }
 
@@ -234,7 +241,13 @@ mediaInput.addEventListener('change', (event) => {
     } else if (file.type.startsWith('video/')) {
         sourceType = 'video';
         imageLoaded = false;
+        
+        // Configurar miniatura de vídeo
         thumbnail.style.display = 'none';
+        videoThumbnail.src = fileURL;
+        videoThumbnail.style.display = 'block';
+        videoThumbnail.load();
+        
         sourceVideo.src = fileURL;
         sourceVideo.load();
 
@@ -297,7 +310,12 @@ useWebcamButton.addEventListener('click', async () => {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         sourceType = 'webcam';
         imageLoaded = false;
+        
+        // Configurar miniatura de vídeo para webcam
         thumbnail.style.display = 'none';
+        videoThumbnail.srcObject = stream;
+        videoThumbnail.style.display = 'block';
+        
         sourceVideo.srcObject = stream;
         console.log("Acceso a webcam concedido.");
 
@@ -651,6 +669,13 @@ pauseButton.addEventListener('click', () => {
 sourceVideo.addEventListener('play', () => {
     console.log(`Evento 'play' detectado en fuente: ${sourceType}`);
     isVideoPlaying = true;
+    
+    // Reproducir también la miniatura de vídeo
+    if (sourceType === 'video') {
+        videoThumbnail.currentTime = sourceVideo.currentTime;
+        videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
+    }
+    
     startProcessingLoop();
 
     if (sourceType === 'video') {
@@ -672,6 +697,12 @@ sourceVideo.addEventListener('play', () => {
 sourceVideo.addEventListener('pause', () => {
     console.log(`Evento 'pause' detectado en fuente: ${sourceType}`);
     isVideoPlaying = false;
+    
+    // Pausar también la miniatura de vídeo
+    if (sourceType === 'video') {
+        videoThumbnail.pause();
+    }
+    
     stopProcessingLoop();
 
     if (mediaRecorder && mediaRecorder.state === "recording") {
@@ -688,6 +719,15 @@ sourceVideo.addEventListener('pause', () => {
     } else if (sourceType === 'webcam') {
         playButton.disabled = true;
         pauseButton.disabled = true;
+    }
+});
+
+sourceVideo.addEventListener('timeupdate', () => {
+    if (sourceType === 'video' && videoThumbnail.style.display === 'block') {
+        // Sincronizar tiempo solo si la diferencia es mayor a 0.3 segundos para evitar bucles
+        if (Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime) > 0.3) {
+            videoThumbnail.currentTime = sourceVideo.currentTime;
+        }
     }
 });
 
@@ -954,6 +994,10 @@ function resetApp() {
     imageLoaded = false;
     mediaInput.value = "";
     thumbnail.style.display = 'none';
+    videoThumbnail.style.display = 'none';
+    videoThumbnail.pause();
+    videoThumbnail.srcObject = null;
+    videoThumbnail.src = '';
     icon0Input.value = "";
     icon1Input.value = "";
     icon0Loaded = false;
