@@ -74,6 +74,8 @@ const stopRecordingButton   = document.getElementById('stop-recording');
 
 const invertStylesButton = document.getElementById('invert-cell-styles');
 
+const loopVideoCheckbox = document.getElementById('loop-video');
+
 const gradientSize = 10;
 
 let originalImage = new Image();
@@ -359,6 +361,10 @@ mediaInput.addEventListener('change', (event) => {
                 } else {
                     videoTimeline.style.display = 'none';
                 }
+
+                // Añadir al final del onloadedmetadata del video
+                sourceVideo.loop = loopVideoCheckbox.checked;
+                videoThumbnail.loop = loopVideoCheckbox.checked;
             };
 
             sourceVideo.oncanplay = () => {
@@ -1446,6 +1452,17 @@ function setupVideoEvents() {
 
     sourceVideo.addEventListener('ended', () => {
         console.log("Vídeo finalizado.");
+        
+        // Verificar si el bucle está activado
+        if (loopVideoCheckbox.checked && sourceType === 'video') {
+            console.log("Reiniciando vídeo (modo bucle)");
+            sourceVideo.currentTime = 0;
+            sourceVideo.play()
+                .then(() => console.log("Vídeo reiniciado en bucle"))
+                .catch(err => console.error("Error al reiniciar vídeo en bucle:", err));
+            return;
+        }
+        
         isVideoPlaying = false;
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
@@ -1553,7 +1570,8 @@ function saveUserPreferences() {
         gradient0Direction: gradient0DirectionInput.value,
         gradient1Color1: gradient1Color1Input.value,
         gradient1Color2: gradient1Color2Input.value,
-        gradient1Direction: gradient1DirectionInput.value
+        gradient1Direction: gradient1DirectionInput.value,
+        loopVideo: loopVideoCheckbox.checked
     };
     
     localStorage.setItem('charismaPreferences', JSON.stringify(preferences));
@@ -1589,6 +1607,13 @@ function loadUserPreferences() {
         if (prefs.gradient1Color2) gradient1Color2Input.value = prefs.gradient1Color2;
         if (prefs.gradient1Direction) gradient1DirectionInput.value = prefs.gradient1Direction;
         
+        // Load loop video preference
+        if (prefs.hasOwnProperty('loopVideo')) {
+            loopVideoCheckbox.checked = prefs.loopVideo;
+            sourceVideo.loop = prefs.loopVideo;
+            videoThumbnail.loop = prefs.loopVideo;
+        }
+        
         updateGradientPreviews();
         setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
         setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
@@ -1602,7 +1627,8 @@ function loadUserPreferences() {
 [char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
  gridSizeInput, thresholdInput, solid0ColorInput, solid1ColorInput,
  gradient0Color1Input, gradient0Color2Input, gradient0DirectionInput,
- gradient1Color1Input, gradient1Color2Input, gradient1DirectionInput
+ gradient1Color1Input, gradient1Color2Input, gradient1DirectionInput,
+ loopVideoCheckbox
 ].forEach(element => {
     element.addEventListener('change', saveUserPreferences);
 });
@@ -1631,3 +1657,14 @@ function createStatusBar() {
     document.body.appendChild(statusBar);
     return statusBar;
 }
+
+loopVideoCheckbox.addEventListener('change', () => {
+    // Sincronizar con el elemento de video HTML nativo
+    sourceVideo.loop = loopVideoCheckbox.checked;
+    videoThumbnail.loop = loopVideoCheckbox.checked;
+    
+    // Guardar preferencia
+    if (typeof saveUserPreferences === 'function') {
+        saveUserPreferences();
+    }
+});

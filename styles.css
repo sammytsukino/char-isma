@@ -648,3 +648,22 @@ a.action-btn:active {
 .status-bar.error {
     background-color: #ff0000;
 }
+
+.video-controls-option {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loop-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.loop-control input {
+    margin: 0;
+}
