@@ -1,3 +1,5 @@
+// Eliminar o comentar el siguiente fragmento de código
+/* 
 const accordions = document.querySelectorAll('.accordion');
 accordions.forEach(accordion => {
     accordion.addEventListener('toggle', function () {
@@ -10,6 +12,7 @@ accordions.forEach(accordion => {
         }
     });
 });
+*/
 
 const mediaInput            = document.getElementById('media-upload');
 const useWebcamButton       = document.getElementById('use-webcam');
