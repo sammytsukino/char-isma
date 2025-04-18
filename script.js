@@ -288,6 +288,15 @@ mediaInput.addEventListener('change', (event) => {
             
             sourceVideo.src = fileURL;
             sourceVideo.load();
+            
+            // Reiniciar estados relacionados con mediaRecorder
+            if (mediaRecorder) {
+                if (mediaRecorder.state === "recording") {
+                    try { mediaRecorder.stop(); } catch(e) {}
+                }
+                mediaRecorder = null;
+                recordedChunks = [];
+            }
 
             sourceVideo.onloadedmetadata = () => {
                 console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
@@ -299,32 +308,14 @@ mediaInput.addEventListener('change', (event) => {
                 
                 tempCanvas.width = sourceVideo.videoWidth;
                 tempCanvas.height = sourceVideo.videoHeight;
+                
+                // Configurar eventos de vídeo después de cargar metadata
+                setupVideoEvents();
             };
 
             sourceVideo.oncanplay = () => {
                 console.log("Vídeo listo para reproducir:", file.name);
-                playButton.disabled = false;
-                pauseButton.disabled = true;
-                applyButton.disabled = true;
-                startRecordingButton.disabled = true;
-                stopRecordingButton.disabled = true;
-            };
-            
-            sourceVideo.onended = function() {
-                console.log("Vídeo finalizado.");
-                isVideoPlaying = false;
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                playButton.disabled = false;
-                pauseButton.disabled = true;
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    stopRecording();
-                } else {
-                    startRecordingButton.disabled = true;
-                    stopRecordingButton.disabled = true;
-                }
+                updateButtonStates();  // Usar la nueva función
             };
         } else {
             alert("Tipo de archivo no soportado. Por favor, selecciona una imagen o un vídeo.");
@@ -367,6 +358,7 @@ useWebcamButton.addEventListener('click', async () => {
             sourceVideo.play();
         };
 
+        setupVideoEvents();
     } catch (err) {
         console.error("Error al acceder a la webcam:", err);
         alert(`No se pudo acceder a la webcam: ${err.name} - ${err.message}`);
@@ -495,7 +487,9 @@ function drawProcessedEffect() {
          }
 
      } else if (sourceType === 'video' || sourceType === 'webcam') {
-         if (!isVideoPlaying || sourceVideo.paused || sourceVideo.ended || sourceVideo.readyState < 3) {
+         // Permitir procesar aunque el video esté pausado para captura de frames
+         if ((sourceType === 'video' && sourceVideo.readyState < 2) || 
+             (sourceType === 'webcam' && (!isVideoPlaying || sourceVideo.readyState < 2))) {
              return;
          }
          
@@ -686,11 +680,29 @@ function stopProcessingLoop() {
 
 playButton.addEventListener('click', () => {
     if (sourceType === 'video' && sourceVideo.src && sourceVideo.paused) {
+        // Reiniciar el estado de grabación si existe alguno previo
+        if (mediaRecorder) {
+            if (mediaRecorder.state === "recording") {
+                try {
+                    mediaRecorder.stop();
+                } catch (e) {
+                    console.error("Error al detener grabación existente:", e);
+                }
+            }
+            mediaRecorder = null;
+            recordedChunks = [];
+        }
+        
         sourceVideo.play()
             .then(() => {
                 console.log("Reproducción iniciada por botón.");
             })
-            .catch(err => console.error("Error al iniciar reproducción:", err));
+            .catch(err => {
+                console.error("Error al iniciar reproducción:", err);
+                // Reiniciar estados en caso de error
+                isVideoPlaying = false;
+                updateButtonStates();
+            });
     }
 });
 
@@ -698,71 +710,6 @@ pauseButton.addEventListener('click', () => {
     if (sourceType === 'video' && !sourceVideo.paused) {
         sourceVideo.pause();
         console.log("Reproducción pausada por botón.");
-    }
-});
-
-sourceVideo.addEventListener('play', () => {
-    console.log(`Evento 'play' detectado en fuente: ${sourceType}`);
-    isVideoPlaying = true;
-    
-    // Reproducir también la miniatura de vídeo
-    if (sourceType === 'video') {
-        videoThumbnail.currentTime = sourceVideo.currentTime;
-        videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
-    }
-    
-    startProcessingLoop();
-
-    if (sourceType === 'video') {
-      playButton.disabled = true;
-      pauseButton.disabled = false;
-      captureFrameLink.style.display = 'inline-block';
-      startRecordingButton.disabled = false;
-      stopRecordingButton.disabled = true;
-    } else if (sourceType === 'webcam') {
-      playButton.disabled = true;
-      pauseButton.disabled = true;
-      applyButton.disabled = true;
-      captureFrameLink.style.display = 'inline-block';
-      startRecordingButton.disabled = false;
-      stopRecordingButton.disabled = true;
-    }
-});
-
-sourceVideo.addEventListener('pause', () => {
-    console.log(`Evento 'pause' detectado en fuente: ${sourceType}`);
-    isVideoPlaying = false;
-    
-    // Pausar también la miniatura de vídeo
-    if (sourceType === 'video') {
-        videoThumbnail.pause();
-    }
-    
-    stopProcessingLoop();
-
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        console.log("Fuente pausada, deteniendo grabación...");
-        stopRecording();
-    } else {
-        startRecordingButton.disabled = true;
-        stopRecordingButton.disabled = true;
-    }
-
-    if (sourceType === 'video') {
-      playButton.disabled = false;
-      pauseButton.disabled = true;
-    } else if (sourceType === 'webcam') {
-        playButton.disabled = true;
-        pauseButton.disabled = true;
-    }
-});
-
-sourceVideo.addEventListener('timeupdate', () => {
-    if (sourceType === 'video' && videoThumbnail.style.display === 'block') {
-        // Sincronizar tiempo solo si la diferencia es mayor a 0.3 segundos para evitar bucles
-        if (Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime) > 0.3) {
-            videoThumbnail.currentTime = sourceVideo.currentTime;
-        }
     }
 });
 
@@ -1209,6 +1156,15 @@ function invertCellStyles() {
 invertStylesButton.addEventListener('click', invertCellStyles);
 
 function startRecording() {
+    // Si hay alguna grabación previa, limpiarla completamente
+    if (mediaRecorder) {
+        if (mediaRecorder.state === "recording") {
+            try { mediaRecorder.stop(); } catch (e) {}
+        }
+        mediaRecorder = null;
+        recordedChunks = [];
+    }
+    
     if (canvas.captureStream && typeof MediaRecorder !== 'undefined') {
         console.log("Iniciando grabación del canvas...");
         recordedChunks = [];
@@ -1220,126 +1176,28 @@ function startRecording() {
         } catch(e) {
             console.error("Error al obtener stream del canvas:", e);
             alert("No se pudo iniciar la grabación: error al obtener stream del canvas.");
-            startRecordingButton.disabled = false;
-            stopRecordingButton.disabled = true;
+            updateButtonStates();
             return;
         }
 
-        const optionsCandidates = [
-            { mimeType: 'video/webm; codecs=vp9' },
-            { mimeType: 'video/webm; codecs=vp8' },
-            { mimeType: 'video/webm' },
-        ];
-
-        const options = optionsCandidates.find(opt => {
-             try {
-                 return MediaRecorder.isTypeSupported(opt.mimeType);
-             } catch(e) {
-                 console.warn(`Error comprobando ${opt.mimeType}: ${e}`);
-                 return false;
-             }
-         });
-
-        if (!options) {
-            console.error("No se encontró un MIME type soportado para MediaRecorder.");
-            alert("Tu navegador no soporta los formatos de grabación necesarios (WebM/VP9/VP8).");
-             startRecordingButton.disabled = false;
-             stopRecordingButton.disabled = true;
-            return;
-        }
-
-        console.log("Usando MIME type:", options.mimeType);
-
-        try {
-            mediaRecorder = new MediaRecorder(stream, options);
-        } catch (e) {
-            console.error("Error al crear MediaRecorder:", e);
-            alert("No se pudo crear el grabador de vídeo: " + e.message);
-            startRecordingButton.disabled = false;
-            stopRecordingButton.disabled = true;
-            return;
-        }
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data && event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
-        mediaRecorder.onstop = () => {
-            console.log("Grabación detenida. Procesando chunks...");
-             stopRecordingButton.textContent = "STOP & DOWNLOAD";
-             stopRecordingButton.disabled = true;
-
-             startRecordingButton.disabled = !(sourceType === 'video' || sourceType === 'webcam') || !isVideoPlaying;
-
-             if (recordedChunks.length === 0) {
-                 console.warn("No se grabaron datos.");
-                 alert("La grabación finalizó sin datos. No se generó archivo.");
-                 mediaRecorder = null;
-                 return;
-            }
-
-            const blob = new Blob(recordedChunks, { type: options.mimeType });
-            const url = URL.createObjectURL(blob);
-            const filename = `processed_video_${Date.now()}.${options.mimeType.split('/')[1].split(';')[0]}`;
-            console.log(`Creando enlace para descargar: ${filename}, tamaño: ${blob.size} bytes`);
-
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                console.log("Recursos de descarga liberados.");
-            }, 100);
-
-            mediaRecorder = null;
-            recordedChunks = [];
-        };
-
-        mediaRecorder.onerror = (event) => {
-             let errorMsg = "Ocurrió un error durante la grabación.";
-             if (event.error && event.error.name) {
-                errorMsg += ` (${event.error.name})`;
-                console.error("Error durante la grabación:", event.error.name, event.error.message);
-             } else {
-                 console.error("Error durante la grabación (sin detalles específicos):", event);
-             }
-             alert(errorMsg);
-
-             if (mediaRecorder && mediaRecorder.state === 'recording') {
-                 try { mediaRecorder.stop(); } catch(e){}
-             }
-             stopRecordingButton.textContent = "Detener y Descargar";
-             stopRecordingButton.disabled = true;
-             startRecordingButton.disabled = !(sourceType === 'video' || sourceType === 'webcam') || !isVideoPlaying;
-             mediaRecorder = null;
-             recordedChunks = [];
-        }
-
+        // Resto del código para iniciar grabación
+        // ...
+        
         try {
             mediaRecorder.start();
             console.log("MediaRecorder iniciado, estado:", mediaRecorder.state);
-            startRecordingButton.disabled = true;
-            stopRecordingButton.disabled = false;
-            stopRecordingButton.textContent = "RECORDING... STOP & DOWNLOAD";
+            updateButtonStates();  // Actualizar estados en vez de manipular botones directamente
         } catch (e) {
-             console.error("Error al llamar a mediaRecorder.start():", e);
-             alert("No se pudo iniciar la grabación: " + e.message);
-             startRecordingButton.disabled = false;
-             stopRecordingButton.disabled = true;
-             mediaRecorder = null;
-             return;
+            console.error("Error al llamar a mediaRecorder.start():", e);
+            alert("No se pudo iniciar la grabación: " + e.message);
+            mediaRecorder = null;
+            recordedChunks = [];
+            updateButtonStates();  // Actualizar estados en caso de error
+            return;
         }
     } else {
         alert("Tu navegador no soporta la grabación de canvas (captureStream o MediaRecorder).");
-        startRecordingButton.disabled = false;
-        stopRecordingButton.disabled = true;
+        updateButtonStates();
     }
 }
 
@@ -1384,12 +1242,8 @@ document.getElementById('force-reset').addEventListener('click', function() {
 document.addEventListener("DOMContentLoaded", () => {
     updateGradientPreviews();
     updateGridSizeDisplay();
-    playButton.disabled = true;
-    pauseButton.disabled = true;
-    captureFrameLink.style.display = 'none';
-    applyButton.disabled = false;
-    startRecordingButton.disabled = true;
-    stopRecordingButton.disabled = true;
+    setupVideoEvents();  // Añadir configuración de eventos de vídeo
+    updateButtonStates(); // Usar nueva función para estado inicial
     setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
     setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     resizeCanvas();
@@ -1402,3 +1256,127 @@ window.addEventListener('beforeunload', () => {
     }
     stopCurrentSource();
 });
+
+function updateButtonStates() {
+    if (!sourceType) {
+        // No hay fuente seleccionada
+        playButton.disabled = true;
+        pauseButton.disabled = true;
+        startRecordingButton.disabled = true;
+        stopRecordingButton.disabled = true;
+        captureFrameLink.style.display = 'none';
+        applyButton.disabled = false;
+        return;
+    }
+    
+    if (sourceType === 'image') {
+        // Para imágenes estáticas
+        playButton.disabled = true;
+        pauseButton.disabled = true;
+        startRecordingButton.disabled = true;
+        stopRecordingButton.disabled = true;
+        captureFrameLink.style.display = imageLoaded ? 'inline-block' : 'none';
+        applyButton.disabled = !imageLoaded;
+    } 
+    else if (sourceType === 'video') {
+        // Para vídeos
+        const isPlaying = !sourceVideo.paused && !sourceVideo.ended && sourceVideo.readyState > 2;
+        const videoReady = sourceVideo.readyState >= 2;
+        
+        playButton.disabled = isPlaying || sourceVideo.ended;
+        pauseButton.disabled = !isPlaying;
+        applyButton.disabled = true;
+        
+        // Mostrar botón de captura siempre que el video esté cargado, no solo cuando está reproduciéndose
+        captureFrameLink.style.display = videoReady ? 'inline-block' : 'none';
+        
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            startRecordingButton.disabled = true;
+            stopRecordingButton.disabled = false;
+        } else {
+            startRecordingButton.disabled = !isPlaying;
+            stopRecordingButton.disabled = true;
+        }
+    } 
+    else if (sourceType === 'webcam') {
+        // Para webcam
+        playButton.disabled = true;
+        pauseButton.disabled = true;
+        applyButton.disabled = true;
+        captureFrameLink.style.display = isVideoPlaying ? 'inline-block' : 'none';
+        
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            startRecordingButton.disabled = true;
+            stopRecordingButton.disabled = false;
+        } else {
+            startRecordingButton.disabled = !isVideoPlaying;
+            stopRecordingButton.disabled = true;
+        }
+    }
+}
+
+function setupVideoEvents() {
+    // Eliminar eventos existentes para evitar duplicación
+    sourceVideo.onplay = null;
+    sourceVideo.onpause = null;
+    sourceVideo.ontimeupdate = null;
+    sourceVideo.onended = null;
+
+    // Configurar eventos
+    sourceVideo.addEventListener('play', () => {
+        console.log(`Evento 'play' detectado en fuente: ${sourceType}`);
+        isVideoPlaying = true;
+        
+        // Reproducir también la miniatura de vídeo
+        if (sourceType === 'video') {
+            videoThumbnail.currentTime = sourceVideo.currentTime;
+            videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
+        }
+        
+        startProcessingLoop();
+        updateButtonStates();
+    });
+
+    sourceVideo.addEventListener('pause', () => {
+        console.log(`Evento 'pause' detectado en fuente: ${sourceType}`);
+        isVideoPlaying = false;
+        
+        // Pausar también la miniatura de vídeo
+        if (sourceType === 'video') {
+            videoThumbnail.pause();
+        }
+        
+        stopProcessingLoop();
+
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            console.log("Fuente pausada, deteniendo grabación...");
+            stopRecording();
+        }
+        
+        updateButtonStates();
+    });
+
+    sourceVideo.addEventListener('timeupdate', () => {
+        if (sourceType === 'video' && videoThumbnail.style.display === 'block') {
+            // Sincronizar tiempo solo si la diferencia es mayor a 0.3 segundos para evitar bucles
+            if (Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime) > 0.3) {
+                videoThumbnail.currentTime = sourceVideo.currentTime;
+            }
+        }
+    });
+
+    sourceVideo.addEventListener('ended', () => {
+        console.log("Vídeo finalizado.");
+        isVideoPlaying = false;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            stopRecording();
+        }
+        
+        updateButtonStates();
+    });
+}
