@@ -17,11 +17,11 @@
         <div class="controls">
             <h2 class="app-title">CHAR/ISMA</h2>
             
-            <!-- SOURCE SECTION -->
-            <details class="accordion" open>
+            <!-- STEP 1: SOURCE SELECTION -->
+            <details class="accordion step-accordion" open>
                 <summary>
                     <div class="panel-header">
-                        <i class="fas fa-file-import"></i> SOURCE
+                        <i class="fas fa-file-import"></i> STEP 1: SELECT SOURCE
                     </div>
                 </summary>
                 <div class="content">
@@ -37,57 +37,36 @@
                 </div>
             </details>
             
-            <!-- GRID & THRESHOLD SECTION -->
-            <details class="accordion">
+            <!-- STEP 2: GRID CONFIGURATION -->
+            <details class="accordion step-accordion">
                 <summary>
                     <div class="panel-header">
-                        <i class="fas fa-th"></i> GRID & THRESHOLD
+                        <i class="fas fa-th"></i> STEP 2: ADJUST GRID
                     </div>
                 </summary>
                 <div class="content">
-                    <label for="gridSize">GRID SIZE:</label>
+                    <label for="gridSize">GRID RESOLUTION:</label>
                     <input type="range" id="gridSize" min="10" max="200" value="80">
                     <div class="grid-info">
                         <span id="gridSizeDisplay">80 x 45</span>
                     </div>
-                    <label for="threshold">BRIGHTNESS THRESHOLD:</label>
+                    <label for="threshold">LIGHT/DARK THRESHOLD:</label>
                     <input type="range" id="threshold" min="0" max="255" value="128">
-                </div>
-            </details>
-            
-            <!-- COLORS SECTION -->
-            <details class="accordion">
-                <summary>
-                    <div class="panel-header">
-                        <i class="fas fa-fill"></i> COLORS
-                    </div>
-                </summary>
-                <div class="content">
-                    <label for="bgColor">CANVAS COLOR:</label>
+                    <label for="bgColor">BACKGROUND COLOR:</label>
                     <input type="color" id="bgColor" value="#FFFFFF">
-                    <div class="control-grid">
-                        <div>
-                            <label for="textColor0">TEXT (DARK):</label>
-                            <input type="color" id="textColor0" value="#000000">
-                        </div>
-                        <div>
-                            <label for="textColor1">TEXT (LIGHT):</label>
-                            <input type="color" id="textColor1" value="#000000">
-                        </div>
-                    </div>
                 </div>
             </details>
             
-            <!-- CELL STYLE SECTION -->
-            <details class="accordion" id="cell-type-accordion">
+            <!-- STEP 3: STYLE CONFIGURATION -->
+            <details class="accordion step-accordion">
                 <summary>
                     <div class="panel-header">
-                        <i class="fas fa-palette"></i> CELL STYLE
+                        <i class="fas fa-palette"></i> STEP 3: DESIGN STYLE
                     </div>
                 </summary>
                 <div class="content">
                     <button id="invert-cell-styles" class="style-invert-btn">
-                        <i class="fas fa-sync-alt"></i> INVERT LIGHT/DARK AREAS
+                        <i class="fas fa-sync-alt"></i> SWAP LIGHT/DARK STYLES
                     </button>
                     
                     <!-- Dark Areas Section -->
@@ -100,6 +79,8 @@
                             <div id="character-controls-dark">
                                 <label for="char0">CHARACTER:</label>
                                 <input type="text" id="char0" maxlength="1" value="1">
+                                <label for="textColor0">COLOR:</label>
+                                <input type="color" id="textColor0" value="#000000">
                             </div>
                         </div>
                         <div class="control-group">
@@ -165,6 +146,8 @@
                             <div id="character-controls-bright">
                                 <label for="char1">CHARACTER:</label>
                                 <input type="text" id="char1" maxlength="1" value="0">
+                                <label for="textColor1">COLOR:</label>
+                                <input type="color" id="textColor1" value="#000000">
                             </div>
                         </div>
                         <div class="control-group">
@@ -222,58 +205,81 @@
                 </div>
             </details>
             
-            <!-- ACTIONS SECTION -->
-            <div class="actions-panel">
-                <!-- Media Controls Group -->
-                <div class="actions-group">
-                    <div class="actions-heading"><i class="fas fa-sliders-h"></i> MEDIA CONTROLS</div>
-                    <div class="control-grid">
-                        <button id="play-button" disabled>
-                            <i class="fas fa-play"></i> PLAY
-                        </button>
-                        <button id="pause-button" disabled>
-                            <i class="fas fa-pause"></i> PAUSE
-                        </button>
+            <!-- STEP 4: PREVIEW & PROCESSING -->
+            <details class="accordion step-accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-play-circle"></i> STEP 4: PREVIEW & PROCESS
+                    </div>
+                </summary>
+                <div class="content">
+                    <div class="actions-group">
+                        <div class="control-grid">
+                            <button id="apply-effect">
+                                <i class="fas fa-magic"></i> APPLY EFFECT
+                            </button>
+                            <button id="reset-effect">
+                                <i class="fas fa-undo"></i> RESET
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="actions-group">
+                        <div class="actions-heading"><i class="fas fa-film"></i> VIDEO CONTROLS</div>
+                        <div class="control-grid">
+                            <button id="play-button" disabled>
+                                <i class="fas fa-play"></i> PLAY
+                            </button>
+                            <button id="pause-button" disabled>
+                                <i class="fas fa-pause"></i> PAUSE
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Effect Controls Group -->
-                <div class="actions-group">
-                    <div class="actions-heading"><i class="fas fa-magic"></i> EFFECT CONTROLS</div>
-                    <div class="control-grid">
-                        <button id="apply-effect">
-                            <i class="fas fa-magic"></i> APPLY
-                        </button>
-                        <button id="reset-effect">
-                            <i class="fas fa-undo"></i> RESET
-                        </button>
+            </details>
+            
+            <!-- STEP 5: EXPORT & SHARE -->
+            <details class="accordion step-accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-download"></i> STEP 5: EXPORT & SHARE
+                    </div>
+                </summary>
+                <div class="content">
+                    <div class="actions-group">
+                        <a id="capture-frame" class="action-btn" style="display:none;" download="processed_frame.png">
+                            <i class="fas fa-camera"></i> CAPTURE CURRENT FRAME
+                        </a>
+                    </div>
+                    
+                    <div class="actions-group">
+                        <div class="actions-heading"><i class="fas fa-film"></i> VIDEO RECORDING</div>
+                        <div class="control-grid">
+                            <button id="start-recording" disabled>
+                                <i class="fas fa-record-vinyl"></i> START RECORDING
+                            </button>
+                            <button id="stop-recording" disabled>
+                                <i class="fas fa-stop"></i> STOP & SAVE
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Capture & Recording Group -->
-                <div class="actions-group">
-                    <div class="actions-heading"><i class="fas fa-camera"></i> CAPTURE & RECORDING</div>
-                    <div class="control-grid">
-                        <button id="start-recording" disabled>
-                            <i class="fas fa-record-vinyl"></i> RECORD
-                        </button>
-                        <button id="stop-recording" disabled>
-                            <i class="fas fa-stop"></i> STOP
-                        </button>
+            </details>
+            
+            <!-- TROUBLESHOOTING -->
+            <details class="accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-exclamation-triangle"></i> TROUBLESHOOTING
                     </div>
-                    <a id="capture-frame" class="action-btn" style="display:none;" download="processed_frame.png">
-                        <i class="fas fa-camera"></i> CAPTURE FRAME
-                    </a>
-                </div>
-
-                <!-- Emergency Group -->
-                <div class="actions-group">
-                    <div class="actions-heading"><i class="fas fa-exclamation-triangle"></i> GOT STUCK?</div>
+                </summary>
+                <div class="content">
+                    <p class="help-text">If the app freezes or behaves unexpectedly when switching videos:</p>
                     <button id="force-reset" class="emergency-btn">
                         <i class="fas fa-power-off"></i> HARD RESET
                     </button>
                 </div>
-            </div>
+            </details>
             
             <div class="credits">
                 <p>CRAFTED BY <strong>SAMMYCABELLO</strong></p>
@@ -281,7 +287,7 @@
             <footer class="project-footer">
                 <div class="footer-content">
                     <p>CHAR/ISMA TRANSFORMS IMAGES, VIDEOS AND WEBCAM FOOTAGE INTO ASCII/PIXEL ART USING CHARACTERS, GRADIENTS OR CUSTOM ICONS.</p>
-                    <p class="version">VERSION 1.0 | 2025</p>
+                    <p class="version">VERSION 1.1 | 2025</p>
                 </div>
             </footer>
         </div>

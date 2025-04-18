@@ -538,3 +538,20 @@ a.action-btn:active {
   background-color: #333333;
   color: #ffffff;
 }
+
+.help-text {
+    margin-bottom: 12px;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.emergency-btn {
+    background-color: #ffeeee;
+    border-color: #ff0000;
+    color: #ff0000;
+}
+
+.emergency-btn:hover {
+    background-color: #ff0000;
+    color: #ffffff;
+}
