@@ -88,6 +88,8 @@ h4 {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
+  display: flex;
+  align-items: center;
 }
 
 .accordion summary::-webkit-details-marker {
@@ -99,25 +101,57 @@ h4 {
   background-color: #ffffff;
 }
 
-button, input[type="file"], select {
-  cursor: pointer;
-}
-
-input, select, button {
+button, 
+input[type="file"], 
+select, 
+.action-btn, 
+.file-input-button {
+  width: 100%;
   font-family: 'JetBrains Mono', monospace;
-  margin: 6px 0;
-  padding: 8px;
+  padding: 8px 10px;
   border: 2px solid #000000;
   border-radius: 0;
   background-color: #ffffff;
   color: #000000;
   font-size: 12px;
   text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 6px 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover:not(:disabled),
+.action-btn:hover:not(:disabled),
+.file-input-button:hover:not(:disabled) {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+button:active:not(:disabled),
+.action-btn:active:not(:disabled),
+.file-input-button:active:not(:disabled) {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 input[type="text"], 
 input[type="number"] {
   width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  font-weight: normal;
 }
 
 input[type="range"] {
@@ -221,18 +255,6 @@ input[type="radio"]:checked:before {
   font-weight: bold;
 }
 
-.cell-style-section {
-  margin-top: 20px;
-  padding-top: 12px;
-  border-top: 2px solid #000000;
-}
-
-.cell-style-section:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
 .control-group {
   margin-bottom: 16px;
 }
@@ -250,48 +272,16 @@ input[type="radio"]:checked:before {
   margin-top: 6px;
 }
 
-.actions {
-  margin-top: 16px;
-  padding: 12px;
-  border: 2px solid #000000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.cell-style-section {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 2px solid #000000;
 }
 
-.actions button,
-.actions a {
-  width: 100%;
-  border: 2px solid #000000;
-  background-color: #ffffff;
-  color: #000000;
-  padding: 10px;
-  cursor: pointer;
-  text-decoration: none;
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.actions button:hover:not(:disabled),
-.actions a:hover {
-  background-color: #000000;
-  color: #ffffff;
-}
-
-.actions button:active:not(:disabled),
-.actions a:active {
-  background-color: #333333;
-  color: #ffffff;
-}
-
-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.cell-style-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .control-grid {
@@ -299,6 +289,15 @@ button:disabled {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 8px;
+}
+
+.actions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  border: 2px solid #000000;
 }
 
 .panel-header {
@@ -313,17 +312,55 @@ button:disabled {
   text-align: center;
 }
 
-.action-btn {
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: block;  /* Cambiado de inline-block a block para cubrir todo el ancho */
+  width: 100%;
+  margin-bottom: 8px;
+  cursor: pointer; /* Aplicar cursor pointer a todo el wrapper */
+}
+
+.file-input-button {
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 8px 10px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 6px 0;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  text-transform: uppercase;
-  font-weight: bold;
+  pointer-events: none; /* Permitir que los eventos pasen al input */
 }
 
-.action-btn i {
-  font-size: 14px;
+.file-input-wrapper input[type=file] {
+  position: absolute;
+  font-size: 0; /* Reducir tamaño del texto */
+  opacity: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+}
+
+/* Aplicar el efecto hover directamente al wrapper */
+.file-input-wrapper:hover .file-input-button {
+  background-color: #000000;
+  color: #ffffff;
 }
 
 .preview-container {
@@ -334,50 +371,6 @@ button:disabled {
 
 .preview-container canvas {
   border: 2px solid #000000;
-}
-
-button i, .action-btn i, .panel-header i {
-  font-size: 14px;
-}
-
-.file-input-wrapper {
-  position: relative;
-  overflow: hidden;
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.file-input-wrapper input[type=file] {
-  position: absolute;
-  font-size: 100px;
-  opacity: 0;
-  right: 0;
-  top: 0;
-  cursor: pointer;
-}
-
-.file-input-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background-color: #ffffff;
-  border: 2px solid #000000;
-  cursor: pointer;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 100%;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-}
-
-.file-input-button:hover {
-  background-color: #000000;
-  color: #ffffff;
 }
 
 fieldset {
@@ -394,34 +387,6 @@ legend {
   font-size: 12px;
 }
 
-.thumbnail {
-  position: fixed;
-  bottom: 12px;
-  right: 12px;
-  width: 200px;
-  height: auto;
-  z-index: 3;
-  border: 2px solid #000000;
-  object-fit: cover;
-}
-
-.style-invert-btn {
-  margin-bottom: 16px;
-  background-color: #ffffff;
-  border: 2px solid #000000;
-  color: #000000;
-}
-
-.style-invert-btn:hover {
-  background-color: #000000;
-  color: #ffffff;
-  border: 2px dashed #ffffff;
-}
-
-.style-invert-btn i {
-  margin-right: 6px;
-}
-
 .grid-info {
   margin-top: 4px;
   margin-bottom: 16px;
@@ -436,29 +401,19 @@ legend {
   letter-spacing: 1px;
 }
 
-@media (max-width: 768px) {
-  .controls {
-    width: 100%;
-    height: auto;
-    max-height: 60vh;
-    bottom: 0;
-    top: auto;
-    border-right: none;
-    border-top: 2px solid #000000;
-  }
-  
-  .thumbnail {
-    display: none !important;
-  }
+.style-invert-btn {
+  width: 100%;
+}
 
-  #canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: calc(100% - 60vh);
-    z-index: 1;
-  }
+.thumbnail {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  width: 200px;
+  height: auto;
+  z-index: 3;
+  border: 2px solid #000000;
+  object-fit: cover;
 }
 
 .project-footer {
@@ -503,7 +458,83 @@ legend {
 }
 
 @media (max-width: 768px) {
+  .controls {
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    bottom: 0;
+    top: auto;
+    border-right: none;
+    border-top: 2px solid #000000;
+  }
+  
+  .thumbnail {
+    display: none !important;
+  }
+
+  #canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 60vh);
+    z-index: 1;
+  }
+  
   .project-footer {
     margin-bottom: 10px;
   }
+}
+
+.actions-group {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 8px;
+}
+
+.actions-group:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.actions-heading {
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #000;
+}
+
+/* Aquí ajustamos los estilos para los enlaces que funcionan como botones */
+a.action-btn {
+  display: flex;
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 8px 10px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 12px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 6px 0;
+  transition: all 0.2s ease;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+a.action-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+a.action-btn:active {
+  background-color: #333333;
+  color: #ffffff;
 }

@@ -16,6 +16,8 @@
     <div class="overlay">
         <div class="controls">
             <h2 class="app-title">CHAR/ISMA</h2>
+            
+            <!-- SOURCE SECTION -->
             <details class="accordion" open>
                 <summary>
                     <div class="panel-header">
@@ -29,11 +31,54 @@
                         </div>
                         <input type="file" id="media-upload" accept="image/*,video/*">
                     </div>
-                    <button id="use-webcam" class="action-btn">
+                    <button id="use-webcam">
                         <i class="fas fa-camera"></i> USE WEBCAM
                     </button>
                 </div>
             </details>
+            
+            <!-- GRID & THRESHOLD SECTION -->
+            <details class="accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-th"></i> GRID & THRESHOLD
+                    </div>
+                </summary>
+                <div class="content">
+                    <label for="gridSize">GRID SIZE:</label>
+                    <input type="range" id="gridSize" min="10" max="200" value="80">
+                    <div class="grid-info">
+                        <span id="gridSizeDisplay">80 x 45</span>
+                    </div>
+                    <label for="threshold">BRIGHTNESS THRESHOLD:</label>
+                    <input type="range" id="threshold" min="0" max="255" value="128">
+                </div>
+            </details>
+            
+            <!-- COLORS SECTION -->
+            <details class="accordion">
+                <summary>
+                    <div class="panel-header">
+                        <i class="fas fa-fill"></i> COLORS
+                    </div>
+                </summary>
+                <div class="content">
+                    <label for="bgColor">CANVAS COLOR:</label>
+                    <input type="color" id="bgColor" value="#FFFFFF">
+                    <div class="control-grid">
+                        <div>
+                            <label for="textColor0">TEXT (DARK):</label>
+                            <input type="color" id="textColor0" value="#000000">
+                        </div>
+                        <div>
+                            <label for="textColor1">TEXT (LIGHT):</label>
+                            <input type="color" id="textColor1" value="#000000">
+                        </div>
+                    </div>
+                </div>
+            </details>
+            
+            <!-- CELL STYLE SECTION -->
             <details class="accordion" id="cell-type-accordion">
                 <summary>
                     <div class="panel-header">
@@ -41,11 +86,13 @@
                     </div>
                 </summary>
                 <div class="content">
-                    <button id="invert-cell-styles" class="action-btn style-invert-btn">
+                    <button id="invert-cell-styles" class="style-invert-btn">
                         <i class="fas fa-sync-alt"></i> INVERT LIGHT/DARK AREAS
                     </button>
+                    
+                    <!-- Dark Areas Section -->
                     <div class="cell-style-section">
-                        <h4><i class="fas fa-square"></i> BACKGROUND (DARK AREAS)</h4>
+                        <h4><i class="fas fa-square"></i> DARK AREAS</h4>
                         <div class="control-group">
                             <label>
                                 <input type="radio" name="cellTypeDark" value="character" checked> CHARACTER
@@ -74,7 +121,7 @@
                             </label>
                             <div id="gradient-controls-dark" style="display: none;">
                                 <fieldset>
-                                    <legend><i class="fas fa-fill-drip"></i> SETTINGS</legend>
+                                    <legend><i class="fas fa-fill-drip"></i> GRADIENT</legend>
                                     <div class="control-grid">
                                         <div>
                                             <label for="gradient0Color1">START:</label>
@@ -107,8 +154,10 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Light Areas Section -->
                     <div class="cell-style-section">
-                        <h4><i class="fas fa-square-full"></i> ELEMENT (LIGHT AREAS)</h4>
+                        <h4><i class="fas fa-square-full"></i> LIGHT AREAS</h4>
                         <div class="control-group">
                             <label>
                                 <input type="radio" name="cellTypeBright" value="character" checked> CHARACTER
@@ -137,7 +186,7 @@
                             </label>
                             <div id="gradient-controls-bright" style="display: none;">
                                 <fieldset>
-                                    <legend><i class="fas fa-fill-drip"></i> SETTINGS</legend>
+                                    <legend><i class="fas fa-fill-drip"></i> GRADIENT</legend>
                                     <div class="control-grid">
                                         <div>
                                             <label for="gradient1Color1">START:</label>
@@ -172,72 +221,52 @@
                     </div>
                 </div>
             </details>
-            <details class="accordion">
-                <summary>
-                    <div class="panel-header">
-                        <i class="fas fa-fill"></i> COLORS
-                    </div>
-                </summary>
-                <div class="content">
+            
+            <!-- ACTIONS SECTION -->
+            <div class="actions-panel">
+                <!-- Media Controls Group -->
+                <div class="actions-group">
+                    <div class="actions-heading"><i class="fas fa-sliders-h"></i> MEDIA CONTROLS</div>
                     <div class="control-grid">
-                        <div>
-                            <label for="textColor0">TEXT (BG):</label>
-                            <input type="color" id="textColor0" value="#000000">
-                        </div>
-                        <div>
-                            <label for="textColor1">TEXT (ELEM):</label>
-                            <input type="color" id="textColor1" value="#000000">
-                        </div>
+                        <button id="play-button" disabled>
+                            <i class="fas fa-play"></i> PLAY
+                        </button>
+                        <button id="pause-button" disabled>
+                            <i class="fas fa-pause"></i> PAUSE
+                        </button>
                     </div>
-                    <label for="bgColor">CANVAS COLOR:</label>
-                    <input type="color" id="bgColor" value="#FFFFFF">
                 </div>
-            </details>
-            <details class="accordion">
-                <summary>
-                    <div class="panel-header">
-                        <i class="fas fa-th"></i> GRID & THRESHOLD
+                
+                <!-- Effect Controls Group -->
+                <div class="actions-group">
+                    <div class="actions-heading"><i class="fas fa-magic"></i> EFFECT CONTROLS</div>
+                    <div class="control-grid">
+                        <button id="apply-effect">
+                            <i class="fas fa-magic"></i> APPLY
+                        </button>
+                        <button id="reset-effect">
+                            <i class="fas fa-undo"></i> RESET
+                        </button>
                     </div>
-                </summary>
-                <div class="content">
-                    <label for="gridSize">GRID SIZE:</label>
-                    <input type="range" id="gridSize" min="10" max="200" value="80">
-                    <div class="grid-info">
-                        <span id="gridSizeDisplay">80 x 45</span>
+                </div>
+                
+                <!-- Capture & Recording Group -->
+                <div class="actions-group">
+                    <div class="actions-heading"><i class="fas fa-camera"></i> CAPTURE & RECORDING</div>
+                    <div class="control-grid">
+                        <button id="start-recording" disabled>
+                            <i class="fas fa-record-vinyl"></i> RECORD
+                        </button>
+                        <button id="stop-recording" disabled>
+                            <i class="fas fa-stop"></i> STOP
+                        </button>
                     </div>
-                    <label for="threshold">BRIGHTNESS THRESHOLD:</label>
-                    <input type="range" id="threshold" min="0" max="255" value="128">
+                    <a id="capture-frame" class="action-btn" style="display:none;" download="processed_frame.png">
+                        <i class="fas fa-camera"></i> CAPTURE FRAME
+                    </a>
                 </div>
-            </details>
-            <div class="actions">
-                <div class="control-grid">
-                    <button id="play-button" disabled class="action-btn">
-                        <i class="fas fa-play"></i> PLAY
-                    </button>
-                    <button id="pause-button" disabled class="action-btn">
-                        <i class="fas fa-pause"></i> PAUSE
-                    </button>
-                </div>
-                <div class="control-grid">
-                    <button id="start-recording" disabled class="action-btn">
-                        <i class="fas fa-record-vinyl"></i> RECORD
-                    </button>
-                    <button id="stop-recording" disabled class="action-btn">
-                        <i class="fas fa-stop"></i> STOP
-                    </button>
-                </div>
-                <div class="control-grid">
-                    <button id="apply-effect" class="action-btn">
-                        <i class="fas fa-magic"></i> APPLY
-                    </button>
-                    <button id="reset-effect" class="action-btn">
-                        <i class="fas fa-undo"></i> RESET
-                    </button>
-                </div>
-                <a id="capture-frame" style="display:none;" download="processed_frame.png" class="action-btn">
-                    <i class="fas fa-camera"></i> CAPTURE
-                </a>
             </div>
+            
             <div class="credits">
                 <p>CRAFTED BY <strong>SAMMYCABELLO</strong></p>
             </div>
