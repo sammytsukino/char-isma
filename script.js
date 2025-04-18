@@ -14,6 +14,13 @@ function hideLoading() {
 
 let previousFileURL = null; // Variable para almacenar la URL anterior
 
+const THUMBNAIL_WIDTH = 160;  // Ancho reducido para la miniatura
+const THUMBNAIL_HEIGHT = 90;  // Alto reducido para la miniatura (relación 16:9)
+const thumbnailCanvas = document.createElement('canvas');
+const thumbnailCtx = thumbnailCanvas.getContext('2d');
+thumbnailCanvas.width = THUMBNAIL_WIDTH;
+thumbnailCanvas.height = THUMBNAIL_HEIGHT;
+
 const mediaInput            = document.getElementById('media-upload');
 const useWebcamButton       = document.getElementById('use-webcam');
 const sourceVideo           = document.getElementById('source-video');
@@ -304,6 +311,10 @@ mediaInput.addEventListener('change', (event) => {
             videoThumbnail.onerror = function() {
                 console.error("Error al cargar la miniatura del vídeo");
             };
+
+            // Configurar para baja resolución
+            videoThumbnail.width = THUMBNAIL_WIDTH;
+            videoThumbnail.height = THUMBNAIL_HEIGHT;
             videoThumbnail.src = fileURL;
             videoThumbnail.load();
             
@@ -376,6 +387,8 @@ useWebcamButton.addEventListener('click', async () => {
         
         // Configurar miniatura de vídeo para webcam
         thumbnail.style.display = 'none';
+        videoThumbnail.width = THUMBNAIL_WIDTH;
+        videoThumbnail.height = THUMBNAIL_HEIGHT;
         videoThumbnail.srcObject = stream;
         videoThumbnail.style.display = 'block';
         
@@ -1381,6 +1394,8 @@ function setupVideoEvents() {
         // Reproducir también la miniatura de vídeo
         if (sourceType === 'video') {
             videoThumbnail.currentTime = sourceVideo.currentTime;
+            // Reducir la calidad de reproducción para la miniatura
+            videoThumbnail.playbackRate = 1.0;  // Asegurar tasa normal
             videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
         }
         
@@ -1408,19 +1423,21 @@ function setupVideoEvents() {
     });
 
     sourceVideo.addEventListener('timeupdate', () => {
-        if (sourceType === 'video' && videoThumbnail.style.display === 'block') {
-            // Sincronizar tiempo solo si la diferencia es mayor a 0.3 segundos para evitar bucles
-            if (Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime) > 0.3) {
-                videoThumbnail.currentTime = sourceVideo.currentTime;
-            }
-        }
-
         if (sourceType === 'video') {
-            // Update scrubber without triggering the change event
+            // Actualizar el scrubber
             videoScrubber.value = sourceVideo.currentTime;
             currentTimeDisplay.textContent = formatTime(sourceVideo.currentTime);
             
-            // When paused, also update the effect (so people can see the exact frame)
+            // Sincronizar miniatura solo ocasionalmente (cada segundo aproximadamente)
+            // o cuando la diferencia es muy grande
+            if (videoThumbnail.style.display === 'block') {
+                const timeDiff = Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime);
+                if (timeDiff > 1.0 || (Math.floor(sourceVideo.currentTime) !== Math.floor(videoThumbnail.currentTime))) {
+                    videoThumbnail.currentTime = sourceVideo.currentTime;
+                }
+            }
+            
+            // Actualizar efecto cuando esté pausado
             if (sourceVideo.paused) {
                 drawProcessedEffect();
             }
