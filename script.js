@@ -1,3 +1,17 @@
+const loadingOverlay = document.createElement('div');
+loadingOverlay.className = 'loading-overlay';
+loadingOverlay.innerHTML = '<div class="spinner"></div><p>Processing...</p>';
+document.body.appendChild(loadingOverlay);
+
+function showLoading(message = 'Processing...') {
+    loadingOverlay.querySelector('p').textContent = message;
+    loadingOverlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    loadingOverlay.style.display = 'none';
+}
+
 let previousFileURL = null; // Variable para almacenar la URL anterior
 
 const mediaInput            = document.getElementById('media-upload');
@@ -211,6 +225,17 @@ function stopCurrentSource() {
     console.log("Fuente de vídeo detenida y limpiada.");
 }
 
+// Add this function to script.js
+function openNextAccordion(currentStepNumber) {
+    const accordions = document.querySelectorAll('.step-accordion');
+    // Close all
+    accordions.forEach(acc => acc.open = false);
+    
+    // Open next step
+    const nextStep = accordions[currentStepNumber];
+    if (nextStep) nextStep.open = true;
+}
+
 mediaInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -251,6 +276,9 @@ mediaInput.addEventListener('change', (event) => {
                 pauseButton.disabled = true;
                 startRecordingButton.disabled = true;
                 stopRecordingButton.disabled = true;
+
+                // Open Grid Configuration step
+                openNextAccordion(1); // Opens Step 2
             };
             originalImage.onerror = function() {
                 alert("Error al cargar la imagen.");
@@ -311,6 +339,15 @@ mediaInput.addEventListener('change', (event) => {
                 
                 // Configurar eventos de vídeo después de cargar metadata
                 setupVideoEvents();
+
+                // Set up video timeline
+                if (sourceType === 'video') {
+                    videoScrubber.max = sourceVideo.duration;
+                    videoTimeline.style.display = 'block';
+                    totalTimeDisplay.textContent = formatTime(sourceVideo.duration);
+                } else {
+                    videoTimeline.style.display = 'none';
+                }
             };
 
             sourceVideo.oncanplay = () => {
@@ -679,7 +716,12 @@ function stopProcessingLoop() {
 }
 
 playButton.addEventListener('click', () => {
-    if (sourceType === 'video' && sourceVideo.src && sourceVideo.paused) {
+    if (sourceType === 'video' && sourceVideo.src) {
+        // Si el video ha terminado, reiniciarlo antes de reproducir
+        if (sourceVideo.ended) {
+            sourceVideo.currentTime = 0;
+        }
+        
         // Reiniciar el estado de grabación si existe alguno previo
         if (mediaRecorder) {
             if (mediaRecorder.state === "recording") {
@@ -715,8 +757,12 @@ pauseButton.addEventListener('click', () => {
 
 applyButton.addEventListener('click', () => {
     if (sourceType === 'image' && imageLoaded) {
-        console.log("Aplicando efecto a imagen estática...");
-        drawProcessedEffect();
+        showLoading();
+        setTimeout(() => {
+            drawProcessedEffect();
+            hideLoading();
+            openNextAccordion(4); // Opens Export & Share step
+        }, 100);
     } else if (sourceType === 'video' || sourceType === 'webcam') {
         console.warn("El botón 'Aplicar Efecto' no tiene acción en modo vídeo/webcam.");
     } else {
@@ -726,7 +772,8 @@ applyButton.addEventListener('click', () => {
 
 captureFrameLink.addEventListener('click', (event) => {
     if (sourceType === 'video' || sourceType === 'webcam' || sourceType === 'image') {
-        console.log("Capturando fotograma en alta resolución...");
+        showLoading('Generating high-resolution image...');
+        showStatusMessage('Capturing high-resolution frame...'); 
         
         event.preventDefault();
         
@@ -753,6 +800,8 @@ captureFrameLink.addEventListener('click', (event) => {
         setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(hiResUrl);
+            hideLoading();
+            showStatusMessage('Frame captured and saved successfully!');
         }, 100);
     }
 });
@@ -1247,6 +1296,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
     setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     resizeCanvas();
+    loadUserPreferences();
 });
 
 window.addEventListener('beforeunload', () => {
@@ -1283,7 +1333,8 @@ function updateButtonStates() {
         const isPlaying = !sourceVideo.paused && !sourceVideo.ended && sourceVideo.readyState > 2;
         const videoReady = sourceVideo.readyState >= 2;
         
-        playButton.disabled = isPlaying || sourceVideo.ended;
+        // CAMBIO AQUÍ: Permitir reproducir cuando está pausado, incluso si ha terminado
+        playButton.disabled = isPlaying;
         pauseButton.disabled = !isPlaying;
         applyButton.disabled = true;
         
@@ -1299,7 +1350,7 @@ function updateButtonStates() {
         }
     } 
     else if (sourceType === 'webcam') {
-        // Para webcam
+        // Para webcam (sin cambios)
         playButton.disabled = true;
         pauseButton.disabled = true;
         applyButton.disabled = true;
@@ -1363,6 +1414,17 @@ function setupVideoEvents() {
                 videoThumbnail.currentTime = sourceVideo.currentTime;
             }
         }
+
+        if (sourceType === 'video') {
+            // Update scrubber without triggering the change event
+            videoScrubber.value = sourceVideo.currentTime;
+            currentTimeDisplay.textContent = formatTime(sourceVideo.currentTime);
+            
+            // When paused, also update the effect (so people can see the exact frame)
+            if (sourceVideo.paused) {
+                drawProcessedEffect();
+            }
+        }
     });
 
     sourceVideo.addEventListener('ended', () => {
@@ -1379,4 +1441,176 @@ function setupVideoEvents() {
         
         updateButtonStates();
     });
+}
+
+// Add to script.js
+const videoScrubber = document.getElementById('video-scrubber');
+const videoTimeline = document.getElementById('video-timeline');
+const currentTimeDisplay = document.getElementById('current-time');
+const totalTimeDisplay = document.getElementById('total-time');
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Handle scrubber interaction
+videoScrubber.addEventListener('input', () => {
+    if (sourceType === 'video') {
+        sourceVideo.currentTime = videoScrubber.value;
+        currentTimeDisplay.textContent = formatTime(sourceVideo.currentTime);
+        
+        if (sourceVideo.paused) {
+            // Update video thumbnail
+            videoThumbnail.currentTime = sourceVideo.currentTime;
+            // Also update the effect visualization
+            drawProcessedEffect();
+        }
+    }
+});
+
+// Add to the end of script.js
+document.addEventListener('keydown', function(event) {
+    // Only respond if not in input field
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') return;
+    
+    switch(event.key) {
+        case ' ': // Spacebar - Play/Pause toggle
+            if (sourceType === 'video') {
+                if (sourceVideo.paused) {
+                    playButton.click();
+                } else {
+                    pauseButton.click();
+                }
+                event.preventDefault();
+            }
+            break;
+        case 'c': // C - Capture frame
+            if (captureFrameLink.style.display !== 'none') {
+                captureFrameLink.click();
+                event.preventDefault();
+            }
+            break;
+        case 'r': // R - Toggle recording
+            if (!startRecordingButton.disabled) {
+                startRecordingButton.click();
+                event.preventDefault();
+            } else if (!stopRecordingButton.disabled) {
+                stopRecordingButton.click();
+                event.preventDefault();
+            }
+            break;
+    }
+});
+
+// Add a tooltip to inform users about shortcuts
+const shortcutInfo = document.createElement('div');
+shortcutInfo.className = 'shortcut-info';
+shortcutInfo.innerHTML = `
+    <h4>KEYBOARD SHORTCUTS</h4>
+    <ul>
+        <li><strong>Space</strong> - Play/Pause video</li>
+        <li><strong>C</strong> - Capture current frame</li>
+        <li><strong>R</strong> - Start/Stop recording</li>
+    </ul>
+`;
+document.querySelector('.controls').appendChild(shortcutInfo);
+
+// Add to script.js
+function saveUserPreferences() {
+    const preferences = {
+        char0: char0Input.value,
+        char1: char1Input.value, 
+        textColor0: textColor0Input.value,
+        textColor1: textColor1Input.value,
+        bgColor: bgColorInput.value,
+        gridSize: gridSizeInput.value,
+        threshold: thresholdInput.value,
+        cellTypeDark: document.querySelector('input[name="cellTypeDark"]:checked').value,
+        cellTypeBright: document.querySelector('input[name="cellTypeBright"]:checked').value,
+        solid0Color: solid0ColorInput.value,
+        solid1Color: solid1ColorInput.value,
+        gradient0Color1: gradient0Color1Input.value,
+        gradient0Color2: gradient0Color2Input.value,
+        gradient0Direction: gradient0DirectionInput.value,
+        gradient1Color1: gradient1Color1Input.value,
+        gradient1Color2: gradient1Color2Input.value,
+        gradient1Direction: gradient1DirectionInput.value
+    };
+    
+    localStorage.setItem('charismaPreferences', JSON.stringify(preferences));
+}
+
+function loadUserPreferences() {
+    const savedPrefs = localStorage.getItem('charismaPreferences');
+    if (!savedPrefs) return;
+    
+    try {
+        const prefs = JSON.parse(savedPrefs);
+        
+        // Apply preferences
+        if (prefs.char0) char0Input.value = prefs.char0;
+        if (prefs.char1) char1Input.value = prefs.char1;
+        if (prefs.textColor0) textColor0Input.value = prefs.textColor0;
+        if (prefs.textColor1) textColor1Input.value = prefs.textColor1;
+        if (prefs.bgColor) bgColorInput.value = prefs.bgColor;
+        if (prefs.gridSize) gridSizeInput.value = prefs.gridSize;
+        if (prefs.threshold) thresholdInput.value = prefs.threshold;
+        if (prefs.cellTypeDark) {
+            document.querySelector(`input[name="cellTypeDark"][value="${prefs.cellTypeDark}"]`).checked = true;
+        }
+        if (prefs.cellTypeBright) {
+            document.querySelector(`input[name="cellTypeBright"][value="${prefs.cellTypeBright}"]`).checked = true; 
+        }
+        if (prefs.solid0Color) solid0ColorInput.value = prefs.solid0Color;
+        if (prefs.solid1Color) solid1ColorInput.value = prefs.solid1Color;
+        if (prefs.gradient0Color1) gradient0Color1Input.value = prefs.gradient0Color1;
+        if (prefs.gradient0Color2) gradient0Color2Input.value = prefs.gradient0Color2;
+        if (prefs.gradient0Direction) gradient0DirectionInput.value = prefs.gradient0Direction;
+        if (prefs.gradient1Color1) gradient1Color1Input.value = prefs.gradient1Color1;
+        if (prefs.gradient1Color2) gradient1Color2Input.value = prefs.gradient1Color2;
+        if (prefs.gradient1Direction) gradient1DirectionInput.value = prefs.gradient1Direction;
+        
+        updateGradientPreviews();
+        setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+        setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+        updateGridSizeDisplay();
+    } catch (e) {
+        console.error('Error loading preferences:', e);
+    }
+}
+
+// Attach event listeners to save preferences when settings change
+[char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
+ gridSizeInput, thresholdInput, solid0ColorInput, solid1ColorInput,
+ gradient0Color1Input, gradient0Color2Input, gradient0DirectionInput,
+ gradient1Color1Input, gradient1Color2Input, gradient1DirectionInput
+].forEach(element => {
+    element.addEventListener('change', saveUserPreferences);
+});
+
+document.querySelectorAll('input[name="cellTypeDark"], input[name="cellTypeBright"]')
+    .forEach(radio => radio.addEventListener('change', saveUserPreferences));
+
+// Add to script.js
+function showStatusMessage(message, isError = false) {
+    const statusBar = document.getElementById('status-bar') || createStatusBar();
+    statusBar.textContent = message;
+    statusBar.className = isError ? 'status-bar error' : 'status-bar';
+    statusBar.style.opacity = 1;
+    
+    // Auto-hide after 3 seconds
+    clearTimeout(statusBar._timeout);
+    statusBar._timeout = setTimeout(() => {
+        statusBar.style.opacity = 0;
+    }, 3000);
+}
+
+function createStatusBar() {
+    const statusBar = document.createElement('div');
+    statusBar.id = 'status-bar';
+    statusBar.className = 'status-bar';
+    document.body.appendChild(statusBar);
+    return statusBar;
 }
