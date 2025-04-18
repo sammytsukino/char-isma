@@ -1,18 +1,4 @@
-// Eliminar o comentar el siguiente fragmento de código
-/* 
-const accordions = document.querySelectorAll('.accordion');
-accordions.forEach(accordion => {
-    accordion.addEventListener('toggle', function () {
-        if (accordion.open) {
-            accordions.forEach(otherAccordion => {
-                if (otherAccordion !== accordion && otherAccordion.open) {
-                    otherAccordion.removeAttribute('open');
-                }
-            });
-        }
-    });
-});
-*/
+let previousFileURL = null; // Variable para almacenar la URL anterior
 
 const mediaInput            = document.getElementById('media-upload');
 const useWebcamButton       = document.getElementById('use-webcam');
@@ -176,16 +162,43 @@ function stopCurrentSource() {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
     }
+    
     if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        try {
+            stream.getTracks().forEach(track => {
+                track.stop();
+                stream.removeTrack(track);
+            });
+        } catch (e) {
+            console.error("Error al detener tracks de stream:", e);
+        }
         stream = null;
         console.log("Stream de webcam detenido.");
     }
-    sourceVideo.pause();
-    sourceVideo.srcObject = null;
-    sourceVideo.src = '';
-    isVideoPlaying = false;
+    
+    // Detener y limpiar completamente el video
+    try {
+        sourceVideo.pause();
+        sourceVideo.removeAttribute('src');
+        sourceVideo.load();
+        sourceVideo.srcObject = null;
+        isVideoPlaying = false;
+    } catch (e) {
+        console.error("Error al limpiar el elemento de vídeo:", e);
+    }
     sourceType = null;
+
+    // Detener y limpiar miniatura de vídeo
+    try {
+        videoThumbnail.pause();
+        videoThumbnail.removeAttribute('src');
+        videoThumbnail.load();
+        videoThumbnail.srcObject = null;
+        thumbnail.style.display = 'none';
+        videoThumbnail.style.display = 'none';
+    } catch (e) {
+        console.error("Error al limpiar miniatura de vídeo:", e);
+    }
 
     playButton.disabled = true;
     pauseButton.disabled = true;
@@ -195,12 +208,6 @@ function stopCurrentSource() {
     stopRecordingButton.textContent = "STOP & DOWNLOAD";
     applyButton.disabled = false;
 
-    thumbnail.style.display = 'none';
-    videoThumbnail.style.display = 'none';
-    videoThumbnail.pause();
-    videoThumbnail.srcObject = null;
-    videoThumbnail.src = '';
-
     console.log("Fuente de vídeo detenida y limpiada.");
 }
 
@@ -208,97 +215,122 @@ mediaInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Detener fuente actual
     stopCurrentSource();
+    
+    // Revocar URL anterior si existe
+    if (previousFileURL) {
+        URL.revokeObjectURL(previousFileURL);
+        previousFileURL = null;
+    }
+    
+    // Pequeño retraso para asegurarnos que los recursos se liberen completamente
+    setTimeout(() => {
+        const fileURL = URL.createObjectURL(file);
+        previousFileURL = fileURL; // Guardar la URL para revocarla más tarde
 
-    const fileURL = URL.createObjectURL(file);
+        if (file.type.startsWith('image/')) {
+            sourceType = 'image';
+            originalImage = new Image();
+            imageLoaded = false;
 
-    if (file.type.startsWith('image/')) {
-        sourceType = 'image';
-        originalImage = new Image();
-        imageLoaded = false;
-
-        originalImage.onload = function() {
-            imageLoaded = true;
-            thumbnail.src = fileURL;
-            thumbnail.style.display = 'block';
-            console.log("Imagen cargada:", file.name);
-            
-            canvasAspectRatio = originalImage.width / originalImage.height;
-            sourceWidth = originalImage.width;
-            sourceHeight = originalImage.height;
-            resizeCanvas();
-            
-            drawOriginalImage();
-            applyButton.disabled = false;
-            playButton.disabled = true;
-            pauseButton.disabled = true;
-            startRecordingButton.disabled = true;
-            stopRecordingButton.disabled = true;
-        };
-        originalImage.onerror = function() {
-            alert("Error al cargar la imagen.");
-            resetApp();
-        }
-        originalImage.src = fileURL;
-
-    } else if (file.type.startsWith('video/')) {
-        sourceType = 'video';
-        imageLoaded = false;
-        
-        // Configurar miniatura de vídeo
-        thumbnail.style.display = 'none';
-        videoThumbnail.src = fileURL;
-        videoThumbnail.style.display = 'block';
-        videoThumbnail.load();
-        
-        sourceVideo.src = fileURL;
-        sourceVideo.load();
-
-        sourceVideo.onloadedmetadata = () => {
-            console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
-            
-            canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
-            sourceWidth = sourceVideo.videoWidth;
-            sourceHeight = sourceVideo.videoHeight;
-            resizeCanvas();
-            
-            tempCanvas.width = sourceVideo.videoWidth;
-            tempCanvas.height = sourceVideo.videoHeight;
-        };
-
-        sourceVideo.oncanplay = () => {
-            console.log("Vídeo listo para reproducir:", file.name);
-            playButton.disabled = false;
-            pauseButton.disabled = true;
-            applyButton.disabled = true;
-            startRecordingButton.disabled = true;
-            stopRecordingButton.disabled = true;
-        };
-        sourceVideo.onerror = function() {
-            alert("Error al cargar el vídeo.");
-            resetApp();
-        }
-        sourceVideo.onended = function() {
-            console.log("Vídeo finalizado.");
-            isVideoPlaying = false;
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            playButton.disabled = false;
-            pauseButton.disabled = true;
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                stopRecording();
-            } else {
+            originalImage.onload = function() {
+                imageLoaded = true;
+                thumbnail.src = fileURL;
+                thumbnail.style.display = 'block';
+                console.log("Imagen cargada:", file.name);
+                
+                canvasAspectRatio = originalImage.width / originalImage.height;
+                sourceWidth = originalImage.width;
+                sourceHeight = originalImage.height;
+                resizeCanvas();
+                
+                drawOriginalImage();
+                applyButton.disabled = false;
+                playButton.disabled = true;
+                pauseButton.disabled = true;
                 startRecordingButton.disabled = true;
                 stopRecordingButton.disabled = true;
+            };
+            originalImage.onerror = function() {
+                alert("Error al cargar la imagen.");
+                resetApp();
             }
-        };
+            originalImage.src = fileURL;
 
-    } else {
-        alert("Tipo de archivo no soportado. Por favor, selecciona una imagen o un vídeo.");
-        resetApp();
-    }
+        } else if (file.type.startsWith('video/')) {
+            sourceType = 'video';
+            imageLoaded = false;
+            
+            // Limpiar completamente los elementos de video
+            videoThumbnail.onloadeddata = null;
+            videoThumbnail.onerror = null;
+            sourceVideo.onloadedmetadata = null;
+            sourceVideo.oncanplay = null;
+            sourceVideo.onerror = null;
+            sourceVideo.onended = null;
+            
+            // Configurar miniatura de vídeo con nuevo evento de error
+            thumbnail.style.display = 'none';
+            videoThumbnail.style.display = 'block';
+            videoThumbnail.onerror = function() {
+                console.error("Error al cargar la miniatura del vídeo");
+            };
+            videoThumbnail.src = fileURL;
+            videoThumbnail.load();
+            
+            // Configurar video fuente con manejo de errores mejorado
+            sourceVideo.onerror = function() {
+                console.error("Error al cargar el vídeo:", sourceVideo.error);
+                alert("Error al cargar el vídeo.");
+                resetApp();
+            };
+            
+            sourceVideo.src = fileURL;
+            sourceVideo.load();
+
+            sourceVideo.onloadedmetadata = () => {
+                console.log("Metadata del vídeo cargada. Dimensiones:", sourceVideo.videoWidth, "x", sourceVideo.videoHeight);
+                
+                canvasAspectRatio = sourceVideo.videoWidth / sourceVideo.videoHeight;
+                sourceWidth = sourceVideo.videoWidth;
+                sourceHeight = sourceVideo.videoHeight;
+                resizeCanvas();
+                
+                tempCanvas.width = sourceVideo.videoWidth;
+                tempCanvas.height = sourceVideo.videoHeight;
+            };
+
+            sourceVideo.oncanplay = () => {
+                console.log("Vídeo listo para reproducir:", file.name);
+                playButton.disabled = false;
+                pauseButton.disabled = true;
+                applyButton.disabled = true;
+                startRecordingButton.disabled = true;
+                stopRecordingButton.disabled = true;
+            };
+            
+            sourceVideo.onended = function() {
+                console.log("Vídeo finalizado.");
+                isVideoPlaying = false;
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                playButton.disabled = false;
+                pauseButton.disabled = true;
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    stopRecording();
+                } else {
+                    startRecordingButton.disabled = true;
+                    stopRecordingButton.disabled = true;
+                }
+            };
+        } else {
+            alert("Tipo de archivo no soportado. Por favor, selecciona una imagen o un vídeo.");
+            resetApp();
+        }
+    }, 100); // Añadir un pequeño retardo de 100ms
 });
 
 useWebcamButton.addEventListener('click', async () => {
@@ -1334,6 +1366,20 @@ function stopRecording() {
 
 startRecordingButton.addEventListener('click', startRecording);
 stopRecordingButton.addEventListener('click', stopRecording);
+
+document.getElementById('force-reset').addEventListener('click', function() {
+    if (confirm("Are you sure? Doing this will completely reset the app.")) {
+        // Intentar limpiar recursos críticos antes de recargar
+        if (previousFileURL) {
+            URL.revokeObjectURL(previousFileURL);
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        // Recargar la página
+        window.location.reload();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     updateGradientPreviews();
