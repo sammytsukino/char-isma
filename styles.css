@@ -667,3 +667,14 @@ a.action-btn:active {
 .loop-control input {
     margin: 0;
 }
+
+/* Añadir estilo para el checkbox de previsualización en vivo */
+.live-preview-active {
+    color: #00aa00;
+    font-weight: bold;
+}
+
+/* Mejorar visibilidad del botón Apply cuando no es necesario */
+.apply-button-inactive {
+    opacity: 0.5;
+}

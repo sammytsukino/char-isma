@@ -520,7 +520,42 @@ icon1Input.addEventListener('change', (event) => {
     }
 });
 
+// Al principio del archivo, añadir una variable para controlar el throttling
+let lastRenderTime = 0;
+const RENDER_THROTTLE = 50; // ms entre renders para no sobrecargar
+
+// Añadir contador de FPS para debug (opcional)
+let frameCount = 0;
+let lastFpsTime = 0;
+let fps = 0;
+
+function updateFPS() {
+    frameCount++;
+    const now = Date.now();
+    if (now - lastFpsTime >= 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastFpsTime = now;
+        console.log(`Render FPS: ${fps}`);
+    }
+}
+
+// Modificar drawProcessedEffect para incluir throttling
 function drawProcessedEffect() {
+     // Aplicar throttling para evitar demasiados renders en controles como sliders
+     const now = Date.now();
+     if (now - lastRenderTime < RENDER_THROTTLE && sourceType === 'image') {
+         // Programar un render pendiente
+         if (!window._pendingRender) {
+             window._pendingRender = setTimeout(() => {
+                 window._pendingRender = null;
+                 drawProcessedEffect();
+             }, RENDER_THROTTLE);
+         }
+         return;
+     }
+     lastRenderTime = now;
+     
      if (!sourceType || (sourceType === 'image' && !imageLoaded)) {
          return;
      }
@@ -706,6 +741,10 @@ function drawProcessedEffect() {
             captureFrameLink.innerHTML = captureFrameLink.innerHTML + ' CAPTURE IN HIGH-RES';
         }
     }
+
+    if (sourceType === 'image') {
+        updateFPS();
+    }
 }
 
 function processFrame() {
@@ -780,7 +819,6 @@ applyButton.addEventListener('click', () => {
         setTimeout(() => {
             drawProcessedEffect();
             hideLoading();
-            openNextAccordion(4); // Opens Export & Share step
         }, 100);
     } else if (sourceType === 'video' || sourceType === 'webcam') {
         console.warn("El botón 'Aplicar Efecto' no tiene acción en modo vídeo/webcam.");
@@ -1089,6 +1127,15 @@ function resetApp() {
     stopRecordingButton.disabled = true;
     stopRecordingButton.textContent = "STOP & DOWNLOAD";
 
+    const livePreviewCheckbox = document.getElementById('live-preview');
+    if (livePreviewCheckbox && livePreviewCheckbox.checked) {
+        setTimeout(() => {
+            if (sourceType === 'image' && imageLoaded) {
+                drawProcessedEffect();
+            }
+        }, 100);
+    }
+
     console.log("Aplicación reseteada.");
 }
 resetButton.addEventListener('click', resetApp);
@@ -1316,6 +1363,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     resizeCanvas();
     loadUserPreferences();
+    enableLivePreviewForImage();
 });
 
 window.addEventListener('beforeunload', () => {
@@ -1571,7 +1619,8 @@ function saveUserPreferences() {
         gradient1Color1: gradient1Color1Input.value,
         gradient1Color2: gradient1Color2Input.value,
         gradient1Direction: gradient1DirectionInput.value,
-        loopVideo: loopVideoCheckbox.checked
+        loopVideo: loopVideoCheckbox.checked,
+        livePreview: document.getElementById('live-preview')?.checked || false
     };
     
     localStorage.setItem('charismaPreferences', JSON.stringify(preferences));
@@ -1612,6 +1661,14 @@ function loadUserPreferences() {
             loopVideoCheckbox.checked = prefs.loopVideo;
             sourceVideo.loop = prefs.loopVideo;
             videoThumbnail.loop = prefs.loopVideo;
+        }
+
+        // Load live preview preference
+        if (prefs.hasOwnProperty('livePreview')) {
+            const livePreviewCheckbox = document.getElementById('live-preview');
+            if (livePreviewCheckbox) {
+                livePreviewCheckbox.checked = prefs.livePreview;
+            }
         }
         
         updateGradientPreviews();
@@ -1668,3 +1725,73 @@ loopVideoCheckbox.addEventListener('change', () => {
         saveUserPreferences();
     }
 });
+
+function enableLivePreviewForImage() {
+    const livePreviewContainer = document.createElement('div');
+    livePreviewContainer.className = 'video-controls-option';
+    livePreviewContainer.innerHTML = `
+        <label for="live-preview" class="loop-control">
+            <input type="checkbox" id="live-preview" checked> LIVE PREVIEW
+        </label>
+    `;
+    
+    const applyEffectButton = document.getElementById('apply-effect');
+    applyEffectButton.parentNode.parentNode.appendChild(livePreviewContainer);
+    
+    const livePreviewCheckbox = document.getElementById('live-preview');
+    
+    function updateLivePreview() {
+        if (sourceType === 'image' && imageLoaded && livePreviewCheckbox.checked) {
+            drawProcessedEffect();
+        }
+    }
+    
+    const controlInputs = [
+        gridSizeInput, thresholdInput, bgColorInput, 
+        char0Input, textColor0Input, char1Input, textColor1Input,
+        solid0ColorInput, solid1ColorInput, 
+        gradient0Color1Input, gradient0Color2Input, gradient0DirectionInput,
+        gradient1Color1Input, gradient1Color2Input, gradient1DirectionInput
+    ];
+    
+    controlInputs.forEach(input => {
+        input.addEventListener('input', updateLivePreview);
+    });
+    
+    document.querySelectorAll('input[name="cellTypeDark"], input[name="cellTypeBright"]')
+        .forEach(radio => {
+            radio.addEventListener('change', () => {
+                setTimeout(updateLivePreview, 10);
+            });
+        });
+    
+    icon0Input.addEventListener('change', () => {
+        if (!icon0Image.onload) {
+            icon0Image.onload = updateLivePreview;
+        }
+    });
+    
+    icon1Input.addEventListener('change', () => {
+        if (!icon1Image.onload) {
+            icon1Image.onload = updateLivePreview;
+        }
+    });
+    
+    invertStylesButton.addEventListener('click', () => {
+        // Already calls drawProcessedEffect() in invertCellStyles
+    });
+    
+    livePreviewCheckbox.addEventListener('change', () => {
+        if (livePreviewCheckbox.checked) {
+            updateLivePreview();
+        }
+        
+        if (typeof saveUserPreferences === 'function') {
+            saveUserPreferences();
+        }
+    });
+    
+    if (livePreviewCheckbox.checked) {
+        updateLivePreview();
+    }
+}
