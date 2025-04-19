@@ -315,11 +315,9 @@ input[type="radio"]:checked:before {
 .file-input-wrapper {
   position: relative;
   overflow: hidden;
-  display: block;  /* Cambiado de inline-block a block para cubrir todo el ancho */
-  width: 100%;
+  display: block;    width: 100%;
   margin-bottom: 8px;
-  cursor: pointer; /* Aplicar cursor pointer a todo el wrapper */
-}
+  cursor: pointer; }
 
 .file-input-button {
   width: 100%;
@@ -340,13 +338,11 @@ input[type="radio"]:checked:before {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  pointer-events: none; /* Permitir que los eventos pasen al input */
-}
+  pointer-events: none; }
 
 .file-input-wrapper input[type=file] {
   position: absolute;
-  font-size: 0; /* Reducir tamaño del texto */
-  opacity: 0;
+  font-size: 0;   opacity: 0;
   top: 0;
   left: 0;
   width: 100%;
@@ -357,7 +353,6 @@ input[type="radio"]:checked:before {
   padding: 0;
 }
 
-/* Aplicar el efecto hover directamente al wrapper */
 .file-input-wrapper:hover .file-input-button {
   background-color: #000000;
   color: #ffffff;
@@ -505,7 +500,6 @@ legend {
   color: #000;
 }
 
-/* Aquí ajustamos los estilos para los enlaces que funcionan como botones */
 a.action-btn {
   display: flex;
   width: 100%;
@@ -668,13 +662,11 @@ a.action-btn:active {
     margin: 0;
 }
 
-/* Añadir estilo para el checkbox de previsualización en vivo */
 .live-preview-active {
     color: #00aa00;
     font-weight: bold;
 }
 
-/* Mejorar visibilidad del botón Apply cuando no es necesario */
 .apply-button-inactive {
     opacity: 0.5;
 }

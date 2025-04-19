@@ -12,11 +12,8 @@ function hideLoading() {
     loadingOverlay.style.display = 'none';
 }
 
-let previousFileURL = null; // Variable para almacenar la URL anterior
-
-const THUMBNAIL_WIDTH = 160;  // Ancho reducido para la miniatura
-const THUMBNAIL_HEIGHT = 90;  // Alto reducido para la miniatura (relación 16:9)
-const thumbnailCanvas = document.createElement('canvas');
+let previousFileURL = null; 
+const THUMBNAIL_WIDTH = 160;  const THUMBNAIL_HEIGHT = 90;  const thumbnailCanvas = document.createElement('canvas');
 const thumbnailCtx = thumbnailCanvas.getContext('2d');
 thumbnailCanvas.width = THUMBNAIL_WIDTH;
 thumbnailCanvas.height = THUMBNAIL_HEIGHT;
@@ -199,8 +196,7 @@ function stopCurrentSource() {
         console.log("Stream de webcam detenido.");
     }
     
-    // Detener y limpiar completamente el video
-    try {
+        try {
         sourceVideo.pause();
         sourceVideo.removeAttribute('src');
         sourceVideo.load();
@@ -211,8 +207,7 @@ function stopCurrentSource() {
     }
     sourceType = null;
 
-    // Detener y limpiar miniatura de vídeo
-    try {
+        try {
         videoThumbnail.pause();
         videoThumbnail.removeAttribute('src');
         videoThumbnail.load();
@@ -234,14 +229,11 @@ function stopCurrentSource() {
     console.log("Fuente de vídeo detenida y limpiada.");
 }
 
-// Add this function to script.js
 function openNextAccordion(currentStepNumber) {
     const accordions = document.querySelectorAll('.step-accordion');
-    // Close all
-    accordions.forEach(acc => acc.open = false);
+        accordions.forEach(acc => acc.open = false);
     
-    // Open next step
-    const nextStep = accordions[currentStepNumber];
+        const nextStep = accordions[currentStepNumber];
     if (nextStep) nextStep.open = true;
 }
 
@@ -249,20 +241,16 @@ mediaInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Detener fuente actual
-    stopCurrentSource();
+        stopCurrentSource();
     
-    // Revocar URL anterior si existe
-    if (previousFileURL) {
+        if (previousFileURL) {
         URL.revokeObjectURL(previousFileURL);
         previousFileURL = null;
     }
     
-    // Pequeño retraso para asegurarnos que los recursos se liberen completamente
-    setTimeout(() => {
+        setTimeout(() => {
         const fileURL = URL.createObjectURL(file);
-        previousFileURL = fileURL; // Guardar la URL para revocarla más tarde
-
+        previousFileURL = fileURL; 
         if (file.type.startsWith('image/')) {
             sourceType = 'image';
             originalImage = new Image();
@@ -286,9 +274,7 @@ mediaInput.addEventListener('change', (event) => {
                 startRecordingButton.disabled = true;
                 stopRecordingButton.disabled = true;
 
-                // Open Grid Configuration step
-                openNextAccordion(1); // Opens Step 2
-            };
+                                openNextAccordion(1);             };
             originalImage.onerror = function() {
                 alert("Error al cargar la imagen.");
                 resetApp();
@@ -299,29 +285,25 @@ mediaInput.addEventListener('change', (event) => {
             sourceType = 'video';
             imageLoaded = false;
             
-            // Limpiar completamente los elementos de video
-            videoThumbnail.onloadeddata = null;
+                        videoThumbnail.onloadeddata = null;
             videoThumbnail.onerror = null;
             sourceVideo.onloadedmetadata = null;
             sourceVideo.oncanplay = null;
             sourceVideo.onerror = null;
             sourceVideo.onended = null;
             
-            // Configurar miniatura de vídeo con nuevo evento de error
-            thumbnail.style.display = 'none';
+                        thumbnail.style.display = 'none';
             videoThumbnail.style.display = 'block';
             videoThumbnail.onerror = function() {
                 console.error("Error al cargar la miniatura del vídeo");
             };
 
-            // Configurar para baja resolución
-            videoThumbnail.width = THUMBNAIL_WIDTH;
+                        videoThumbnail.width = THUMBNAIL_WIDTH;
             videoThumbnail.height = THUMBNAIL_HEIGHT;
             videoThumbnail.src = fileURL;
             videoThumbnail.load();
             
-            // Configurar video fuente con manejo de errores mejorado
-            sourceVideo.onerror = function() {
+                        sourceVideo.onerror = function() {
                 console.error("Error al cargar el vídeo:", sourceVideo.error);
                 alert("Error al cargar el vídeo.");
                 resetApp();
@@ -330,8 +312,7 @@ mediaInput.addEventListener('change', (event) => {
             sourceVideo.src = fileURL;
             sourceVideo.load();
             
-            // Reiniciar estados relacionados con mediaRecorder
-            if (mediaRecorder) {
+                        if (mediaRecorder) {
                 if (mediaRecorder.state === "recording") {
                     try { mediaRecorder.stop(); } catch(e) {}
                 }
@@ -350,11 +331,9 @@ mediaInput.addEventListener('change', (event) => {
                 tempCanvas.width = sourceVideo.videoWidth;
                 tempCanvas.height = sourceVideo.videoHeight;
                 
-                // Configurar eventos de vídeo después de cargar metadata
-                setupVideoEvents();
+                                setupVideoEvents();
 
-                // Set up video timeline
-                if (sourceType === 'video') {
+                                if (sourceType === 'video') {
                     videoScrubber.max = sourceVideo.duration;
                     videoTimeline.style.display = 'block';
                     totalTimeDisplay.textContent = formatTime(sourceVideo.duration);
@@ -362,21 +341,18 @@ mediaInput.addEventListener('change', (event) => {
                     videoTimeline.style.display = 'none';
                 }
 
-                // Añadir al final del onloadedmetadata del video
-                sourceVideo.loop = loopVideoCheckbox.checked;
+                                sourceVideo.loop = loopVideoCheckbox.checked;
                 videoThumbnail.loop = loopVideoCheckbox.checked;
             };
 
             sourceVideo.oncanplay = () => {
                 console.log("Vídeo listo para reproducir:", file.name);
-                updateButtonStates();  // Usar la nueva función
-            };
+                updateButtonStates();              };
         } else {
             alert("Tipo de archivo no soportado. Por favor, selecciona una imagen o un vídeo.");
             resetApp();
         }
-    }, 100); // Añadir un pequeño retardo de 100ms
-});
+    }, 100); });
 
 useWebcamButton.addEventListener('click', async () => {
     stopCurrentSource();
@@ -391,8 +367,7 @@ useWebcamButton.addEventListener('click', async () => {
         sourceType = 'webcam';
         imageLoaded = false;
         
-        // Configurar miniatura de vídeo para webcam
-        thumbnail.style.display = 'none';
+                thumbnail.style.display = 'none';
         videoThumbnail.width = THUMBNAIL_WIDTH;
         videoThumbnail.height = THUMBNAIL_HEIGHT;
         videoThumbnail.srcObject = stream;
@@ -520,11 +495,8 @@ icon1Input.addEventListener('change', (event) => {
     }
 });
 
-// Al principio del archivo, añadir una variable para controlar el throttling
 let lastRenderTime = 0;
-const RENDER_THROTTLE = 50; // ms entre renders para no sobrecargar
-
-// Añadir contador de FPS para debug (opcional)
+const RENDER_THROTTLE = 50; 
 let frameCount = 0;
 let lastFpsTime = 0;
 let fps = 0;
@@ -540,13 +512,10 @@ function updateFPS() {
     }
 }
 
-// Modificar drawProcessedEffect para incluir throttling
 function drawProcessedEffect() {
-     // Aplicar throttling para evitar demasiados renders en controles como sliders
-     const now = Date.now();
+          const now = Date.now();
      if (now - lastRenderTime < RENDER_THROTTLE && sourceType === 'image') {
-         // Programar un render pendiente
-         if (!window._pendingRender) {
+                  if (!window._pendingRender) {
              window._pendingRender = setTimeout(() => {
                  window._pendingRender = null;
                  drawProcessedEffect();
@@ -578,8 +547,7 @@ function drawProcessedEffect() {
          }
 
      } else if (sourceType === 'video' || sourceType === 'webcam') {
-         // Permitir procesar aunque el video esté pausado para captura de frames
-         if ((sourceType === 'video' && sourceVideo.readyState < 2) || 
+                  if ((sourceType === 'video' && sourceVideo.readyState < 2) || 
              (sourceType === 'webcam' && (!isVideoPlaying || sourceVideo.readyState < 2))) {
              return;
          }
@@ -775,13 +743,11 @@ function stopProcessingLoop() {
 
 playButton.addEventListener('click', () => {
     if (sourceType === 'video' && sourceVideo.src) {
-        // Si el video ha terminado, reiniciarlo antes de reproducir
-        if (sourceVideo.ended) {
+                if (sourceVideo.ended) {
             sourceVideo.currentTime = 0;
         }
         
-        // Reiniciar el estado de grabación si existe alguno previo
-        if (mediaRecorder) {
+                if (mediaRecorder) {
             if (mediaRecorder.state === "recording") {
                 try {
                     mediaRecorder.stop();
@@ -799,8 +765,7 @@ playButton.addEventListener('click', () => {
             })
             .catch(err => {
                 console.error("Error al iniciar reproducción:", err);
-                // Reiniciar estados en caso de error
-                isVideoPlaying = false;
+                                isVideoPlaying = false;
                 updateButtonStates();
             });
     }
@@ -1271,8 +1236,7 @@ function invertCellStyles() {
 invertStylesButton.addEventListener('click', invertCellStyles);
 
 function startRecording() {
-    // Si hay alguna grabación previa, limpiarla completamente
-    if (mediaRecorder) {
+        if (mediaRecorder) {
         if (mediaRecorder.state === "recording") {
             try { mediaRecorder.stop(); } catch (e) {}
         }
@@ -1295,20 +1259,16 @@ function startRecording() {
             return;
         }
 
-        // Resto del código para iniciar grabación
-        // ...
-        
+                        
         try {
             mediaRecorder.start();
             console.log("MediaRecorder iniciado, estado:", mediaRecorder.state);
-            updateButtonStates();  // Actualizar estados en vez de manipular botones directamente
-        } catch (e) {
+            updateButtonStates();          } catch (e) {
             console.error("Error al llamar a mediaRecorder.start():", e);
             alert("No se pudo iniciar la grabación: " + e.message);
             mediaRecorder = null;
             recordedChunks = [];
-            updateButtonStates();  // Actualizar estados en caso de error
-            return;
+            updateButtonStates();              return;
         }
     } else {
         alert("Tu navegador no soporta la grabación de canvas (captureStream o MediaRecorder).");
@@ -1342,24 +1302,20 @@ stopRecordingButton.addEventListener('click', stopRecording);
 
 document.getElementById('force-reset').addEventListener('click', function() {
     if (confirm("Are you sure? Doing this will completely reset the app.")) {
-        // Intentar limpiar recursos críticos antes de recargar
-        if (previousFileURL) {
+                if (previousFileURL) {
             URL.revokeObjectURL(previousFileURL);
         }
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
-        // Recargar la página
-        window.location.reload();
+                window.location.reload();
     }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
     updateGradientPreviews();
     updateGridSizeDisplay();
-    setupVideoEvents();  // Añadir configuración de eventos de vídeo
-    updateButtonStates(); // Usar nueva función para estado inicial
-    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupVideoEvents();      updateButtonStates();     setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
     setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     resizeCanvas();
     loadUserPreferences();
@@ -1376,8 +1332,7 @@ window.addEventListener('beforeunload', () => {
 
 function updateButtonStates() {
     if (!sourceType) {
-        // No hay fuente seleccionada
-        playButton.disabled = true;
+                playButton.disabled = true;
         pauseButton.disabled = true;
         startRecordingButton.disabled = true;
         stopRecordingButton.disabled = true;
@@ -1387,8 +1342,7 @@ function updateButtonStates() {
     }
     
     if (sourceType === 'image') {
-        // Para imágenes estáticas
-        playButton.disabled = true;
+                playButton.disabled = true;
         pauseButton.disabled = true;
         startRecordingButton.disabled = true;
         stopRecordingButton.disabled = true;
@@ -1396,17 +1350,14 @@ function updateButtonStates() {
         applyButton.disabled = !imageLoaded;
     } 
     else if (sourceType === 'video') {
-        // Para vídeos
-        const isPlaying = !sourceVideo.paused && !sourceVideo.ended && sourceVideo.readyState > 2;
+                const isPlaying = !sourceVideo.paused && !sourceVideo.ended && sourceVideo.readyState > 2;
         const videoReady = sourceVideo.readyState >= 2;
         
-        // CAMBIO AQUÍ: Permitir reproducir cuando está pausado, incluso si ha terminado
-        playButton.disabled = isPlaying;
+                playButton.disabled = isPlaying;
         pauseButton.disabled = !isPlaying;
         applyButton.disabled = true;
         
-        // Mostrar botón de captura siempre que el video esté cargado, no solo cuando está reproduciéndose
-        captureFrameLink.style.display = videoReady ? 'inline-block' : 'none';
+                captureFrameLink.style.display = videoReady ? 'inline-block' : 'none';
         
         if (mediaRecorder && mediaRecorder.state === "recording") {
             startRecordingButton.disabled = true;
@@ -1417,8 +1368,7 @@ function updateButtonStates() {
         }
     } 
     else if (sourceType === 'webcam') {
-        // Para webcam (sin cambios)
-        playButton.disabled = true;
+                playButton.disabled = true;
         pauseButton.disabled = true;
         applyButton.disabled = true;
         captureFrameLink.style.display = isVideoPlaying ? 'inline-block' : 'none';
@@ -1434,23 +1384,18 @@ function updateButtonStates() {
 }
 
 function setupVideoEvents() {
-    // Eliminar eventos existentes para evitar duplicación
-    sourceVideo.onplay = null;
+        sourceVideo.onplay = null;
     sourceVideo.onpause = null;
     sourceVideo.ontimeupdate = null;
     sourceVideo.onended = null;
 
-    // Configurar eventos
-    sourceVideo.addEventListener('play', () => {
+        sourceVideo.addEventListener('play', () => {
         console.log(`Evento 'play' detectado en fuente: ${sourceType}`);
         isVideoPlaying = true;
         
-        // Reproducir también la miniatura de vídeo
-        if (sourceType === 'video') {
+                if (sourceType === 'video') {
             videoThumbnail.currentTime = sourceVideo.currentTime;
-            // Reducir la calidad de reproducción para la miniatura
-            videoThumbnail.playbackRate = 1.0;  // Asegurar tasa normal
-            videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
+                        videoThumbnail.playbackRate = 1.0;              videoThumbnail.play().catch(e => console.error("Error reproduciendo miniatura:", e));
         }
         
         startProcessingLoop();
@@ -1461,8 +1406,7 @@ function setupVideoEvents() {
         console.log(`Evento 'pause' detectado en fuente: ${sourceType}`);
         isVideoPlaying = false;
         
-        // Pausar también la miniatura de vídeo
-        if (sourceType === 'video') {
+                if (sourceType === 'video') {
             videoThumbnail.pause();
         }
         
@@ -1478,21 +1422,17 @@ function setupVideoEvents() {
 
     sourceVideo.addEventListener('timeupdate', () => {
         if (sourceType === 'video') {
-            // Actualizar el scrubber
-            videoScrubber.value = sourceVideo.currentTime;
+                        videoScrubber.value = sourceVideo.currentTime;
             currentTimeDisplay.textContent = formatTime(sourceVideo.currentTime);
             
-            // Sincronizar miniatura solo ocasionalmente (cada segundo aproximadamente)
-            // o cuando la diferencia es muy grande
-            if (videoThumbnail.style.display === 'block') {
+                                    if (videoThumbnail.style.display === 'block') {
                 const timeDiff = Math.abs(videoThumbnail.currentTime - sourceVideo.currentTime);
                 if (timeDiff > 1.0 || (Math.floor(sourceVideo.currentTime) !== Math.floor(videoThumbnail.currentTime))) {
                     videoThumbnail.currentTime = sourceVideo.currentTime;
                 }
             }
             
-            // Actualizar efecto cuando esté pausado
-            if (sourceVideo.paused) {
+                        if (sourceVideo.paused) {
                 drawProcessedEffect();
             }
         }
@@ -1501,8 +1441,7 @@ function setupVideoEvents() {
     sourceVideo.addEventListener('ended', () => {
         console.log("Vídeo finalizado.");
         
-        // Verificar si el bucle está activado
-        if (loopVideoCheckbox.checked && sourceType === 'video') {
+                if (loopVideoCheckbox.checked && sourceType === 'video') {
             console.log("Reiniciando vídeo (modo bucle)");
             sourceVideo.currentTime = 0;
             sourceVideo.play()
@@ -1525,7 +1464,6 @@ function setupVideoEvents() {
     });
 }
 
-// Add to script.js
 const videoScrubber = document.getElementById('video-scrubber');
 const videoTimeline = document.getElementById('video-timeline');
 const currentTimeDisplay = document.getElementById('current-time');
@@ -1537,29 +1475,23 @@ function formatTime(seconds) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Handle scrubber interaction
 videoScrubber.addEventListener('input', () => {
     if (sourceType === 'video') {
         sourceVideo.currentTime = videoScrubber.value;
         currentTimeDisplay.textContent = formatTime(sourceVideo.currentTime);
         
         if (sourceVideo.paused) {
-            // Update video thumbnail
-            videoThumbnail.currentTime = sourceVideo.currentTime;
-            // Also update the effect visualization
-            drawProcessedEffect();
+                        videoThumbnail.currentTime = sourceVideo.currentTime;
+                        drawProcessedEffect();
         }
     }
 });
 
-// Add to the end of script.js
 document.addEventListener('keydown', function(event) {
-    // Only respond if not in input field
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') return;
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') return;
     
     switch(event.key) {
-        case ' ': // Spacebar - Play/Pause toggle
-            if (sourceType === 'video') {
+        case ' ':             if (sourceType === 'video') {
                 if (sourceVideo.paused) {
                     playButton.click();
                 } else {
@@ -1568,14 +1500,12 @@ document.addEventListener('keydown', function(event) {
                 event.preventDefault();
             }
             break;
-        case 'c': // C - Capture frame
-            if (captureFrameLink.style.display !== 'none') {
+        case 'c':             if (captureFrameLink.style.display !== 'none') {
                 captureFrameLink.click();
                 event.preventDefault();
             }
             break;
-        case 'r': // R - Toggle recording
-            if (!startRecordingButton.disabled) {
+        case 'r':             if (!startRecordingButton.disabled) {
                 startRecordingButton.click();
                 event.preventDefault();
             } else if (!stopRecordingButton.disabled) {
@@ -1586,7 +1516,6 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Add a tooltip to inform users about shortcuts
 const shortcutInfo = document.createElement('div');
 shortcutInfo.className = 'shortcut-info';
 shortcutInfo.innerHTML = `
@@ -1599,7 +1528,6 @@ shortcutInfo.innerHTML = `
 `;
 document.querySelector('.controls').appendChild(shortcutInfo);
 
-// Add to script.js
 function saveUserPreferences() {
     const preferences = {
         char0: char0Input.value,
@@ -1633,8 +1561,7 @@ function loadUserPreferences() {
     try {
         const prefs = JSON.parse(savedPrefs);
         
-        // Apply preferences
-        if (prefs.char0) char0Input.value = prefs.char0;
+                if (prefs.char0) char0Input.value = prefs.char0;
         if (prefs.char1) char1Input.value = prefs.char1;
         if (prefs.textColor0) textColor0Input.value = prefs.textColor0;
         if (prefs.textColor1) textColor1Input.value = prefs.textColor1;
@@ -1656,15 +1583,13 @@ function loadUserPreferences() {
         if (prefs.gradient1Color2) gradient1Color2Input.value = prefs.gradient1Color2;
         if (prefs.gradient1Direction) gradient1DirectionInput.value = prefs.gradient1Direction;
         
-        // Load loop video preference
-        if (prefs.hasOwnProperty('loopVideo')) {
+                if (prefs.hasOwnProperty('loopVideo')) {
             loopVideoCheckbox.checked = prefs.loopVideo;
             sourceVideo.loop = prefs.loopVideo;
             videoThumbnail.loop = prefs.loopVideo;
         }
 
-        // Load live preview preference
-        if (prefs.hasOwnProperty('livePreview')) {
+                if (prefs.hasOwnProperty('livePreview')) {
             const livePreviewCheckbox = document.getElementById('live-preview');
             if (livePreviewCheckbox) {
                 livePreviewCheckbox.checked = prefs.livePreview;
@@ -1680,7 +1605,6 @@ function loadUserPreferences() {
     }
 }
 
-// Attach event listeners to save preferences when settings change
 [char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
  gridSizeInput, thresholdInput, solid0ColorInput, solid1ColorInput,
  gradient0Color1Input, gradient0Color2Input, gradient0DirectionInput,
@@ -1693,15 +1617,13 @@ function loadUserPreferences() {
 document.querySelectorAll('input[name="cellTypeDark"], input[name="cellTypeBright"]')
     .forEach(radio => radio.addEventListener('change', saveUserPreferences));
 
-// Add to script.js
 function showStatusMessage(message, isError = false) {
     const statusBar = document.getElementById('status-bar') || createStatusBar();
     statusBar.textContent = message;
     statusBar.className = isError ? 'status-bar error' : 'status-bar';
     statusBar.style.opacity = 1;
     
-    // Auto-hide after 3 seconds
-    clearTimeout(statusBar._timeout);
+        clearTimeout(statusBar._timeout);
     statusBar._timeout = setTimeout(() => {
         statusBar.style.opacity = 0;
     }, 3000);
@@ -1716,12 +1638,10 @@ function createStatusBar() {
 }
 
 loopVideoCheckbox.addEventListener('change', () => {
-    // Sincronizar con el elemento de video HTML nativo
-    sourceVideo.loop = loopVideoCheckbox.checked;
+        sourceVideo.loop = loopVideoCheckbox.checked;
     videoThumbnail.loop = loopVideoCheckbox.checked;
     
-    // Guardar preferencia
-    if (typeof saveUserPreferences === 'function') {
+        if (typeof saveUserPreferences === 'function') {
         saveUserPreferences();
     }
 });
@@ -1778,8 +1698,7 @@ function enableLivePreviewForImage() {
     });
     
     invertStylesButton.addEventListener('click', () => {
-        // Already calls drawProcessedEffect() in invertCellStyles
-    });
+            });
     
     livePreviewCheckbox.addEventListener('change', () => {
         if (livePreviewCheckbox.checked) {
