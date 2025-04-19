@@ -1556,53 +1556,54 @@ function saveUserPreferences() {
 
 function loadUserPreferences() {
     const savedPrefs = localStorage.getItem('charismaPreferences');
-    if (!savedPrefs) return;
+    let prefs = {};
     
-    try {
-        const prefs = JSON.parse(savedPrefs);
-        
-                if (prefs.char0) char0Input.value = prefs.char0;
-        if (prefs.char1) char1Input.value = prefs.char1;
-        if (prefs.textColor0) textColor0Input.value = prefs.textColor0;
-        if (prefs.textColor1) textColor1Input.value = prefs.textColor1;
-        if (prefs.bgColor) bgColorInput.value = prefs.bgColor;
-        if (prefs.gridSize) gridSizeInput.value = prefs.gridSize;
-        if (prefs.threshold) thresholdInput.value = prefs.threshold;
-        if (prefs.cellTypeDark) {
-            document.querySelector(`input[name="cellTypeDark"][value="${prefs.cellTypeDark}"]`).checked = true;
+    if (savedPrefs) {
+        try {
+            prefs = JSON.parse(savedPrefs);
+        } catch (e) {
+            console.error('Error loading preferences:', e);
+            prefs = {};
         }
-        if (prefs.cellTypeBright) {
-            document.querySelector(`input[name="cellTypeBright"][value="${prefs.cellTypeBright}"]`).checked = true; 
-        }
-        if (prefs.solid0Color) solid0ColorInput.value = prefs.solid0Color;
-        if (prefs.solid1Color) solid1ColorInput.value = prefs.solid1Color;
-        if (prefs.gradient0Color1) gradient0Color1Input.value = prefs.gradient0Color1;
-        if (prefs.gradient0Color2) gradient0Color2Input.value = prefs.gradient0Color2;
-        if (prefs.gradient0Direction) gradient0DirectionInput.value = prefs.gradient0Direction;
-        if (prefs.gradient1Color1) gradient1Color1Input.value = prefs.gradient1Color1;
-        if (prefs.gradient1Color2) gradient1Color2Input.value = prefs.gradient1Color2;
-        if (prefs.gradient1Direction) gradient1DirectionInput.value = prefs.gradient1Direction;
-        
-                if (prefs.hasOwnProperty('loopVideo')) {
-            loopVideoCheckbox.checked = prefs.loopVideo;
-            sourceVideo.loop = prefs.loopVideo;
-            videoThumbnail.loop = prefs.loopVideo;
-        }
-
-                if (prefs.hasOwnProperty('livePreview')) {
-            const livePreviewCheckbox = document.getElementById('live-preview');
-            if (livePreviewCheckbox) {
-                livePreviewCheckbox.checked = prefs.livePreview;
-            }
-        }
-        
-        updateGradientPreviews();
-        setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
-        setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
-        updateGridSizeDisplay();
-    } catch (e) {
-        console.error('Error loading preferences:', e);
     }
+    
+    if (prefs.char0) char0Input.value = prefs.char0;
+    if (prefs.char1) char1Input.value = prefs.char1;
+    if (prefs.textColor0) textColor0Input.value = prefs.textColor0;
+    if (prefs.textColor1) textColor1Input.value = prefs.textColor1;
+    if (prefs.bgColor) bgColorInput.value = prefs.bgColor;
+    if (prefs.gridSize) gridSizeInput.value = prefs.gridSize;
+    if (prefs.threshold) thresholdInput.value = prefs.threshold;
+    if (prefs.cellTypeDark) {
+        document.querySelector(`input[name="cellTypeDark"][value="${prefs.cellTypeDark}"]`).checked = true;
+    }
+    if (prefs.cellTypeBright) {
+        document.querySelector(`input[name="cellTypeBright"][value="${prefs.cellTypeBright}"]`).checked = true; 
+    }
+    if (prefs.solid0Color) solid0ColorInput.value = prefs.solid0Color;
+    if (prefs.solid1Color) solid1ColorInput.value = prefs.solid1Color;
+    if (prefs.gradient0Color1) gradient0Color1Input.value = prefs.gradient0Color1;
+    if (prefs.gradient0Color2) gradient0Color2Input.value = prefs.gradient0Color2;
+    if (prefs.gradient0Direction) gradient0DirectionInput.value = prefs.gradient0Direction;
+    if (prefs.gradient1Color1) gradient1Color1Input.value = prefs.gradient1Color1;
+    if (prefs.gradient1Color2) gradient1Color2Input.value = prefs.gradient1Color2;
+    if (prefs.gradient1Direction) gradient1DirectionInput.value = prefs.gradient1Direction;
+    
+    if (prefs.hasOwnProperty('loopVideo')) {
+        loopVideoCheckbox.checked = prefs.loopVideo;
+        sourceVideo.loop = prefs.loopVideo;
+        videoThumbnail.loop = prefs.loopVideo;
+    }
+
+    const livePreviewCheckbox = document.getElementById('live-preview');
+    if (livePreviewCheckbox) {
+        livePreviewCheckbox.checked = prefs.hasOwnProperty('livePreview') ? prefs.livePreview : true;
+    }
+    
+    updateGradientPreviews();
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+    updateGridSizeDisplay();
 }
 
 [char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
@@ -1698,7 +1699,8 @@ function enableLivePreviewForImage() {
     });
     
     invertStylesButton.addEventListener('click', () => {
-            });
+        setTimeout(updateLivePreview, 10);
+    });
     
     livePreviewCheckbox.addEventListener('change', () => {
         if (livePreviewCheckbox.checked) {
@@ -1710,7 +1712,9 @@ function enableLivePreviewForImage() {
         }
     });
     
-    if (livePreviewCheckbox.checked) {
+    livePreviewCheckbox.checked = true;
+    
+    if (sourceType === 'image' && imageLoaded) {
         updateLivePreview();
     }
 }
