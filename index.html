@@ -69,10 +69,13 @@
                                 <input type="radio" name="cellTypeDark" value="character" checked> CHARACTER
                             </label>
                             <div id="character-controls-dark">
-                                <label for="char0">CHARACTER:</label>
-                                <input type="text" id="char0" maxlength="1" value="1">
-                                <label for="textColor0">COLOR:</label>
+                                <label for="char0">CHARACTERS (DARK):</label>
+                                <input type="text" id="char0" maxlength="20" value="@%#*+=-:. ">
+                                <small>Use multiple characters. The character shown will depend on cell brightness (darkest: left, brightest: right).</small>
+                                <label for="textColor0">TEXT COLOR:</label>
                                 <input type="color" id="textColor0" value="#000000">
+                                <label for="backgroundColor0">BACKGROUND COLOR:</label>
+                                <input type="color" id="backgroundColor0" value="#FFFFFF">
                             </div>
                         </div>
                         <div class="control-group">
@@ -134,10 +137,13 @@
                                 <input type="radio" name="cellTypeBright" value="character" checked> CHARACTER
                             </label>
                             <div id="character-controls-bright">
-                                <label for="char1">CHARACTER:</label>
-                                <input type="text" id="char1" maxlength="1" value="0">
-                                <label for="textColor1">COLOR:</label>
+                                <label for="char1">CHARACTERS (BRIGHT):</label>
+                                <input type="text" id="char1" maxlength="20" value="@%#*+=-:. ">
+                                <small>Use multiple characters. The character shown will depend on cell brightness (darkest: left, brightest: right).</small>
+                                <label for="textColor1">TEXT COLOR:</label>
                                 <input type="color" id="textColor1" value="#000000">
+                                <label for="backgroundColor1">BACKGROUND COLOR:</label>
+                                <input type="color" id="backgroundColor1" value="#FFFFFF">
                             </div>
                         </div>
                         <div class="control-group">
@@ -189,6 +195,74 @@
                             <div id="solid-controls-bright" style="display: none;">
                                 <label for="solid1Color">COLOR:</label>
                                 <input type="color" id="solid1Color" value="#ffffff">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cell-style-section">
+                        <h4><i class="fas fa-adjust"></i> MIDTONES</h4>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeMid" value="character" checked> CHARACTER
+                            </label>
+                            <div id="character-controls-mid">
+                                <label for="charMid">CHARACTERS (MID):</label>
+                                <input type="text" id="charMid" maxlength="20" value="@%#*+=-:. ">
+                                <small>Use multiple characters. The character shown will depend on cell brightness (darkest: left, brightest: right).</small>
+                                <label for="textColorMid">TEXT COLOR:</label>
+                                <input type="color" id="textColorMid" value="#000000">
+                                <label for="backgroundColorMid">BACKGROUND COLOR:</label>
+                                <input type="color" id="backgroundColorMid" value="#FFFFFF">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeMid" value="icon"> ICON
+                            </label>
+                            <div id="icon-controls-mid" style="display: none;">
+                                <div class="file-input-wrapper">
+                                    <div class="file-input-button">
+                                        <i class="fas fa-image"></i> SELECT ICON
+                                    </div>
+                                    <input type="file" id="iconMid-upload" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeMid" value="gradient"> GRADIENT
+                            </label>
+                            <div id="gradient-controls-mid" style="display: none;">
+                                <fieldset>
+                                    <legend><i class="fas fa-fill-drip"></i> GRADIENT</legend>
+                                    <div class="control-grid">
+                                        <div>
+                                            <label for="gradientMidColor1">START:</label>
+                                            <input type="color" id="gradientMidColor1" value="#ff00ff">
+                                        </div>
+                                        <div>
+                                            <label for="gradientMidColor2">END:</label>
+                                            <input type="color" id="gradientMidColor2" value="#00ffff">
+                                        </div>
+                                    </div>
+                                    <label for="gradientMidDirection">DIRECTION:</label>
+                                    <select id="gradientMidDirection">
+                                        <option value="horizontal">HORIZONTAL</option>
+                                        <option value="vertical">VERTICAL</option>
+                                        <option value="diagonal">DIAGONAL</option>
+                                    </select>
+                                </fieldset>
+                                <div class="preview-container">
+                                    <canvas id="gradient-preview-mid" width="50" height="50"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="radio" name="cellTypeMid" value="solid"> SOLID COLOR
+                            </label>
+                            <div id="solid-controls-mid" style="display: none;">
+                                <label for="solidMidColor">COLOR:</label>
+                                <input type="color" id="solidMidColor" value="#888888">
                             </div>
                         </div>
                     </div>

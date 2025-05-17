@@ -31,6 +31,7 @@ const videoThumbnail        = document.getElementById('video-thumbnail');
 
 const char0Input            = document.getElementById('char0');
 const textColor0Input       = document.getElementById('textColor0');
+const backgroundColor0Input = document.getElementById('backgroundColor0');
 const icon0Input            = document.getElementById('icon0-upload');
 const cellTypeRadiosDark    = document.querySelectorAll('input[name="cellTypeDark"]');
 const characterControlsDark = document.getElementById('character-controls-dark');
@@ -46,6 +47,7 @@ const solidControlsDark     = document.getElementById('solid-controls-dark');
 
 const char1Input            = document.getElementById('char1');
 const textColor1Input       = document.getElementById('textColor1');
+const backgroundColor1Input = document.getElementById('backgroundColor1');
 const icon1Input            = document.getElementById('icon1-upload');
 const cellTypeRadiosBright  = document.querySelectorAll('input[name="cellTypeBright"]');
 const characterControlsBright = document.getElementById('character-controls-bright');
@@ -590,10 +592,12 @@ function drawProcessedEffect() {
 
     const selectedCellTypeDark = document.querySelector('input[name="cellTypeDark"]:checked').value;
     const selectedCellTypeBright = document.querySelector('input[name="cellTypeBright"]:checked').value;
-    const charValueDark = char0Input.value || "1";
+    const charsDark = char0Input.value || "@%#*+=-:. ";
     const colorValueDark = textColor0Input.value;
-    const charValueBright = char1Input.value || "0";
+    const bgCellColorDark = backgroundColor0Input.value;
+    const charsBright = char1Input.value || "@%#*+=-:. ";
     const colorValueBright = textColor1Input.value;
+    const bgCellColorBright = backgroundColor1Input.value;
     const solidColorDark = solid0ColorInput.value;
     const solidColorBright = solid1ColorInput.value;
 
@@ -640,15 +644,19 @@ function drawProcessedEffect() {
             if (avgBrightness > threshold) {
                 switch (selectedCellTypeBright) {
                     case 'character':
+                        ctx.fillStyle = bgCellColorBright;
+                        ctx.fillRect(startX, startY, cellW, cellH);
+                        let idxBright = Math.round(((avgBrightness - threshold) / (255 - threshold)) * (charsBright.length - 1));
+                        idxBright = Math.max(0, Math.min(charsBright.length - 1, idxBright));
                         ctx.fillStyle = colorValueBright;
-                        ctx.fillText(charValueBright, startX, startY);
+                        ctx.fillText(charsBright[idxBright], startX, startY);
                         break;
                     case 'icon':
                         if (icon1Loaded) {
                             ctx.drawImage(icon1Image, startX, startY, cellW, cellH);
                         } else {
                             ctx.fillStyle = colorValueBright;
-                            ctx.fillText(charValueBright, startX, startY);
+                            ctx.fillText(charsBright[idxBright], startX, startY);
                         }
                         break;
                     case 'gradient':
@@ -667,15 +675,19 @@ function drawProcessedEffect() {
             } else {
                 switch (selectedCellTypeDark) {
                     case 'character':
+                        ctx.fillStyle = bgCellColorDark;
+                        ctx.fillRect(startX, startY, cellW, cellH);
+                        let idxDark = Math.round((avgBrightness / threshold) * (charsDark.length - 1));
+                        idxDark = Math.max(0, Math.min(charsDark.length - 1, idxDark));
                         ctx.fillStyle = colorValueDark;
-                        ctx.fillText(charValueDark, startX, startY);
+                        ctx.fillText(charsDark[idxDark], startX, startY);
                         break;
                     case 'icon':
                         if (icon0Loaded) {
                             ctx.drawImage(icon0Image, startX, startY, cellW, cellH);
                         } else {
                             ctx.fillStyle = colorValueDark;
-                            ctx.fillText(charValueDark, startX, startY);
+                            ctx.fillText(charsDark[idxDark], startX, startY);
                         }
                         break;
                     case 'gradient':
@@ -879,10 +891,12 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
 
     const selectedCellTypeDark = document.querySelector('input[name="cellTypeDark"]:checked').value;
     const selectedCellTypeBright = document.querySelector('input[name="cellTypeBright"]:checked').value;
-    const charValueDark = char0Input.value || "1";
+    const charsDark = char0Input.value || "@%#*+=-:. ";
     const colorValueDark = textColor0Input.value;
-    const charValueBright = char1Input.value || "0";
+    const bgCellColorDark = backgroundColor0Input.value;
+    const charsBright = char1Input.value || "@%#*+=-:. ";
     const colorValueBright = textColor1Input.value;
+    const bgCellColorBright = backgroundColor1Input.value;
     const solidColorDark = solid0ColorInput.value;
     const solidColorBright = solid1ColorInput.value;
 
@@ -973,15 +987,19 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
             if (avgBrightness > threshold) {
                 switch (selectedCellTypeBright) {
                     case 'character':
+                        hiResCtx.fillStyle = bgCellColorBright;
+                        hiResCtx.fillRect(startX, startY, cellW, cellH);
+                        let idxBright = Math.round(((avgBrightness - threshold) / (255 - threshold)) * (charsBright.length - 1));
+                        idxBright = Math.max(0, Math.min(charsBright.length - 1, idxBright));
                         hiResCtx.fillStyle = colorValueBright;
-                        hiResCtx.fillText(charValueBright, startX, startY);
+                        hiResCtx.fillText(charsBright[idxBright], startX, startY);
                         break;
                     case 'icon':
                         if (icon1Loaded) {
                             hiResCtx.drawImage(hiResIcon1Image || icon1Image, startX, startY, cellW, cellH);
                         } else {
                             hiResCtx.fillStyle = colorValueBright;
-                            hiResCtx.fillText(charValueBright, startX, startY);
+                            hiResCtx.fillText(charsBright[idxBright], startX, startY);
                         }
                         break;
                     case 'gradient':
@@ -1000,15 +1018,19 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
             } else {
                 switch (selectedCellTypeDark) {
                     case 'character':
+                        hiResCtx.fillStyle = bgCellColorDark;
+                        hiResCtx.fillRect(startX, startY, cellW, cellH);
+                        let idxDark = Math.round((avgBrightness / threshold) * (charsDark.length - 1));
+                        idxDark = Math.max(0, Math.min(charsDark.length - 1, idxDark));
                         hiResCtx.fillStyle = colorValueDark;
-                        hiResCtx.fillText(charValueDark, startX, startY);
+                        hiResCtx.fillText(charsDark[idxDark], startX, startY);
                         break;
                     case 'icon':
                         if (icon0Loaded) {
                             hiResCtx.drawImage(hiResIcon0Image || icon0Image, startX, startY, cellW, cellH);
                         } else {
                             hiResCtx.fillStyle = colorValueDark;
-                            hiResCtx.fillText(charValueDark, startX, startY);
+                            hiResCtx.fillText(charsDark[idxDark], startX, startY);
                         }
                         break;
                     case 'gradient':
@@ -1534,6 +1556,8 @@ function saveUserPreferences() {
         char1: char1Input.value, 
         textColor0: textColor0Input.value,
         textColor1: textColor1Input.value,
+        backgroundColor0: backgroundColor0Input.value,
+        backgroundColor1: backgroundColor1Input.value,
         bgColor: bgColorInput.value,
         gridSize: gridSizeInput.value,
         threshold: thresholdInput.value,
@@ -1571,6 +1595,8 @@ function loadUserPreferences() {
     if (prefs.char1) char1Input.value = prefs.char1;
     if (prefs.textColor0) textColor0Input.value = prefs.textColor0;
     if (prefs.textColor1) textColor1Input.value = prefs.textColor1;
+    if (prefs.backgroundColor0) backgroundColor0Input.value = prefs.backgroundColor0;
+    if (prefs.backgroundColor1) backgroundColor1Input.value = prefs.backgroundColor1;
     if (prefs.bgColor) bgColorInput.value = prefs.bgColor;
     if (prefs.gridSize) gridSizeInput.value = prefs.gridSize;
     if (prefs.threshold) thresholdInput.value = prefs.threshold;
@@ -1607,6 +1633,7 @@ function loadUserPreferences() {
 }
 
 [char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
+ backgroundColor0Input, backgroundColor1Input,
  gridSizeInput, thresholdInput, solid0ColorInput, solid1ColorInput,
  gradient0Color1Input, gradient0Color2Input, gradient0DirectionInput,
  gradient1Color1Input, gradient1Color2Input, gradient1DirectionInput,
