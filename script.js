@@ -94,6 +94,10 @@ let recordedChunks = [];
 const tempCanvas = document.createElement('canvas');
 const tempCtx = tempCanvas.getContext('2d');
 
+
+const downscaledSourceCanvas = document.createElement('canvas');
+const downscaledSourceCtx = downscaledSourceCanvas.getContext('2d');
+
 let canvasAspectRatio = 16 / 9;
 let sourceWidth = 0;
 let sourceHeight = 0;
@@ -498,7 +502,7 @@ icon1Input.addEventListener('change', (event) => {
 });
 
 let lastRenderTime = 0;
-const RENDER_THROTTLE = 50; 
+const RENDER_THROTTLE = 20; 
 let frameCount = 0;
 let lastFpsTime = 0;
 let fps = 0;
@@ -531,64 +535,69 @@ function drawProcessedEffect() {
          return;
      }
      
-     let sourceData;
-     
-     if (sourceType === 'image') {
-         tempCanvas.width = canvas.width;
-         tempCanvas.height = canvas.height;
-         tempCtx.drawImage(originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
-         sourceWidth = tempCanvas.width;
-         sourceHeight = tempCanvas.height;
-         try {
-            sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
-         } catch (e) {
-            console.error("Error obteniendo ImageData de la imagen:", e);
-            alert("Error al procesar la imagen.");
-            resetApp();
-            return;
-         }
-
-     } else if (sourceType === 'video' || sourceType === 'webcam') {
-                  if ((sourceType === 'video' && sourceVideo.readyState < 2) || 
-             (sourceType === 'webcam' && (!isVideoPlaying || sourceVideo.readyState < 2))) {
-             return;
-         }
-         
-         tempCanvas.width = canvas.width;
-         tempCanvas.height = canvas.height;
-         
-         tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-         sourceWidth = tempCanvas.width;
-         sourceHeight = tempCanvas.height;
-         
-         try {
-             sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
-         } catch (e) {
-             console.error("Error obteniendo ImageData del vídeo/webcam:", e);
-             stopCurrentSource();
-             alert("Error al procesar el fotograma del vídeo/webcam. Asegúrate de que la fuente lo permita (CORS si es externo).");
-             return;
-         }
-     } else {
-         return;
-     }
-
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     const gridSize = parseInt(gridSizeInput.value, 10);
-    const aspectRatio = canvasHeight / canvasWidth;
+    const currentAspectRatio = canvasHeight / canvasWidth; 
     const numCols = gridSize;
-    const numRows = Math.round(gridSize * aspectRatio);
+    const numRows = Math.round(gridSize * currentAspectRatio);
     const threshold = parseInt(thresholdInput.value, 10) || 128;
     const blockWidth = canvasWidth / numCols;
     const blockHeight = canvasHeight / numRows;
+
+    
+    downscaledSourceCanvas.width = numCols;
+    downscaledSourceCanvas.height = numRows;
+
+    let currentSourceElement;
+    let sourceElementOriginalWidth = 0;
+    let sourceElementOriginalHeight = 0;
+
+    if (sourceType === 'image' && imageLoaded) {
+        currentSourceElement = originalImage;
+        sourceElementOriginalWidth = originalImage.naturalWidth;
+        sourceElementOriginalHeight = originalImage.naturalHeight;
+    } else if ((sourceType === 'video' || sourceType === 'webcam') && sourceVideo.readyState >= 2) {
+        currentSourceElement = sourceVideo;
+        sourceElementOriginalWidth = sourceVideo.videoWidth;
+        sourceElementOriginalHeight = sourceVideo.videoHeight;
+    } else {
+        return; 
+    }
+    
+    if (!currentSourceElement || sourceElementOriginalWidth === 0 || sourceElementOriginalHeight === 0) {
+        console.warn("Fuente no válida o dimensiones cero para drawProcessedEffect");
+        return;
+    }
+
+    downscaledSourceCtx.imageSmoothingEnabled = true; 
+    downscaledSourceCtx.drawImage(currentSourceElement, 0, 0, sourceElementOriginalWidth, sourceElementOriginalHeight, 0, 0, numCols, numRows);
+    
+    let downscaledPixelData;
+    try {
+        downscaledPixelData = downscaledSourceCtx.getImageData(0, 0, numCols, numRows).data;
+    } catch (e) {
+        console.error("Error obteniendo ImageData del canvas downscaled:", e);
+        
+        if (e.name === 'SecurityError') {
+             console.warn("SecurityError con getImageData en canvas downscaled. Esto puede ocurrir con fuentes cross-origin sin CORS.");
+             
+             downscaledSourceCtx.fillStyle = 'black';
+             downscaledSourceCtx.fillRect(0,0,numCols, numRows);
+             downscaledPixelData = downscaledSourceCtx.getImageData(0, 0, numCols, numRows).data;
+        } else {
+            
+            return;
+        }
+    }
+    
 
     ctx.fillStyle = bgColorInput.value;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px monospace`;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false; 
 
     const selectedCellTypeDark = document.querySelector('input[name="cellTypeDark"]:checked').value;
     const selectedCellTypeBright = document.querySelector('input[name="cellTypeBright"]:checked').value;
@@ -617,46 +626,49 @@ function drawProcessedEffect() {
             const startX = Math.round(col * blockWidth);
             const cellW = Math.round((col + 1) * blockWidth) - startX;
 
-            const sourceStartX = Math.floor(col * (sourceWidth / numCols));
-            const sourceEndX = Math.floor((col + 1) * (sourceWidth / numCols));
-            const sourceStartY = Math.floor(row * (sourceHeight / numRows));
-            const sourceEndY = Math.floor((row + 1) * (sourceHeight / numRows));
-
-            let totalBrightness = 0;
-            let pixelCount = 0;
-
-            for (let y = sourceStartY; y < sourceEndY; y++) {
-                for (let x = sourceStartX; x < sourceEndX; x++) {
-                    const index = (y * sourceWidth + x) * 4;
-                    if (index < sourceData.length - 3) {
-                        const r = sourceData[index];
-                        const g = sourceData[index + 1];
-                        const b = sourceData[index + 2];
-                        const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                        totalBrightness += brightness;
-                        pixelCount++;
-                    }
-                }
-            }
-
-            const avgBrightness = pixelCount > 0 ? totalBrightness / pixelCount : 0;
+            
+            const pixelIndex = (row * numCols + col) * 4;
+            const r = downscaledPixelData[pixelIndex];
+            const g = downscaledPixelData[pixelIndex + 1];
+            const b = downscaledPixelData[pixelIndex + 2];
+            
+            const avgBrightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            
 
             if (avgBrightness > threshold) {
                 switch (selectedCellTypeBright) {
                     case 'character':
                         ctx.fillStyle = bgCellColorBright;
                         ctx.fillRect(startX, startY, cellW, cellH);
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(startX, startY, cellW, cellH);
+                        ctx.clip();
+                        
                         let idxBright = Math.round(((avgBrightness - threshold) / (255 - threshold)) * (charsBright.length - 1));
                         idxBright = Math.max(0, Math.min(charsBright.length - 1, idxBright));
                         ctx.fillStyle = colorValueBright;
                         ctx.fillText(charsBright[idxBright], startX, startY);
+                        
+                        ctx.restore();
                         break;
                     case 'icon':
                         if (icon1Loaded) {
                             ctx.drawImage(icon1Image, startX, startY, cellW, cellH);
                         } else {
-                            ctx.fillStyle = colorValueBright;
-                            ctx.fillText(charsBright[idxBright], startX, startY);
+                            
+                            ctx.fillStyle = bgCellColorBright; 
+                            ctx.fillRect(startX, startY, cellW, cellH);
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.rect(startX, startY, cellW, cellH);
+                            ctx.clip();
+                            ctx.fillStyle = colorValueBright; 
+                            
+                            const placeholderBright = charsBright.length > 0 ? charsBright[0] : '?';
+                            ctx.fillText(placeholderBright, startX, startY);
+                            ctx.restore();
                         }
                         break;
                     case 'gradient':
@@ -677,17 +689,34 @@ function drawProcessedEffect() {
                     case 'character':
                         ctx.fillStyle = bgCellColorDark;
                         ctx.fillRect(startX, startY, cellW, cellH);
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(startX, startY, cellW, cellH);
+                        ctx.clip();
+
                         let idxDark = Math.round((avgBrightness / threshold) * (charsDark.length - 1));
                         idxDark = Math.max(0, Math.min(charsDark.length - 1, idxDark));
                         ctx.fillStyle = colorValueDark;
                         ctx.fillText(charsDark[idxDark], startX, startY);
+
+                        ctx.restore();
                         break;
                     case 'icon':
                         if (icon0Loaded) {
                             ctx.drawImage(icon0Image, startX, startY, cellW, cellH);
                         } else {
-                            ctx.fillStyle = colorValueDark;
-                            ctx.fillText(charsDark[idxDark], startX, startY);
+                             
+                            ctx.fillStyle = bgCellColorDark; 
+                            ctx.fillRect(startX, startY, cellW, cellH);
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.rect(startX, startY, cellW, cellH);
+                            ctx.clip();
+                            ctx.fillStyle = colorValueDark; 
+                            const placeholderDark = charsDark.length > 0 ? charsDark[0] : '?';
+                            ctx.fillText(placeholderDark, startX, startY);
+                            ctx.restore();
                         }
                         break;
                     case 'gradient':
@@ -845,49 +874,66 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
         return;
     }
     
-    let sourceData;
-    let sourceWidth, sourceHeight;
-    
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    if (sourceType === 'image') {
-        tempCanvas.width = originalImage.width;
-        tempCanvas.height = originalImage.height;
-        tempCtx.drawImage(originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
-        sourceWidth = tempCanvas.width;
-        sourceHeight = tempCanvas.height;
-    } else if (sourceType === 'video' || sourceType === 'webcam') {
-        tempCanvas.width = sourceVideo.videoWidth;
-        tempCanvas.height = sourceVideo.videoHeight;
-        tempCtx.drawImage(sourceVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-        sourceWidth = tempCanvas.width;
-        sourceHeight = tempCanvas.height;
-    }
-    
-    try {
-        sourceData = tempCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
-    } catch (e) {
-        console.error("Error obteniendo ImageData para versión de alta resolución:", e);
-        return;
-    }
-
     const canvasWidth = hiResCanvas.width;
     const canvasHeight = hiResCanvas.height;
     const gridSize = parseInt(gridSizeInput.value, 10);
-    const aspectRatio = canvasHeight / canvasWidth;
+    const currentHiResAspectRatio = canvasHeight / canvasWidth; 
     const numCols = gridSize;
-    const numRows = Math.round(gridSize * aspectRatio);
+    const numRows = Math.round(gridSize * currentHiResAspectRatio);
     const threshold = parseInt(thresholdInput.value, 10) || 128;
     const blockWidth = canvasWidth / numCols;
     const blockHeight = canvasHeight / numRows;
+
+    
+    downscaledSourceCanvas.width = numCols; 
+    downscaledSourceCanvas.height = numRows; 
+
+    let currentSourceElement;
+    let sourceElementOriginalWidth = 0;
+    let sourceElementOriginalHeight = 0;
+
+    if (sourceType === 'image' && imageLoaded) {
+        currentSourceElement = originalImage;
+        sourceElementOriginalWidth = originalImage.naturalWidth; 
+        sourceElementOriginalHeight = originalImage.naturalHeight;
+    } else if ((sourceType === 'video' || sourceType === 'webcam') && sourceVideo.readyState >= 2) {
+        currentSourceElement = sourceVideo;
+        sourceElementOriginalWidth = sourceVideo.videoWidth;
+        sourceElementOriginalHeight = sourceVideo.videoHeight;
+    } else {
+        return; 
+    }
+
+    if (!currentSourceElement || sourceElementOriginalWidth === 0 || sourceElementOriginalHeight === 0) {
+        console.warn("Fuente no válida o dimensiones cero para renderHighResolutionImage");
+        return;
+    }
+    
+    downscaledSourceCtx.imageSmoothingEnabled = true; 
+    downscaledSourceCtx.drawImage(currentSourceElement, 0, 0, sourceElementOriginalWidth, sourceElementOriginalHeight, 0, 0, numCols, numRows);
+    
+    let downscaledPixelData;
+    try {
+        downscaledPixelData = downscaledSourceCtx.getImageData(0, 0, numCols, numRows).data;
+    } catch (e) {
+        console.error("Error obteniendo ImageData del canvas downscaled (hi-res):", e);
+        if (e.name === 'SecurityError') {
+             console.warn("SecurityError con getImageData en canvas downscaled (hi-res).");
+             downscaledSourceCtx.fillStyle = 'black';
+             downscaledSourceCtx.fillRect(0,0,numCols, numRows);
+             downscaledPixelData = downscaledSourceCtx.getImageData(0, 0, numCols, numRows).data;
+        } else {
+            return;
+        }
+    }
+    
 
     hiResCtx.fillStyle = bgColorInput.value;
     hiResCtx.fillRect(0, 0, canvasWidth, canvasHeight);
     hiResCtx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px monospace`;
     hiResCtx.textBaseline = "top";
     hiResCtx.textAlign = "left";
-    hiResCtx.imageSmoothingEnabled = false;
+    hiResCtx.imageSmoothingEnabled = false; 
 
     const selectedCellTypeDark = document.querySelector('input[name="cellTypeDark"]:checked').value;
     const selectedCellTypeBright = document.querySelector('input[name="cellTypeBright"]:checked').value;
@@ -960,46 +1006,47 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
             const startX = Math.round(col * blockWidth);
             const cellW = Math.round((col + 1) * blockWidth) - startX;
 
-            const sourceStartX = Math.floor(col * (sourceWidth / numCols));
-            const sourceEndX = Math.floor((col + 1) * (sourceWidth / numCols));
-            const sourceStartY = Math.floor(row * (sourceHeight / numRows));
-            const sourceEndY = Math.floor((row + 1) * (sourceHeight / numRows));
-
-            let totalBrightness = 0;
-            let pixelCount = 0;
-
-            for (let y = sourceStartY; y < sourceEndY; y++) {
-                for (let x = sourceStartX; x < sourceEndX; x++) {
-                    const index = (y * sourceWidth + x) * 4;
-                    if (index < sourceData.length - 3) {
-                        const r = sourceData[index];
-                        const g = sourceData[index + 1];
-                        const b = sourceData[index + 2];
-                        const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                        totalBrightness += brightness;
-                        pixelCount++;
-                    }
-                }
-            }
-
-            const avgBrightness = pixelCount > 0 ? totalBrightness / pixelCount : 0;
+            
+            const pixelIndex = (row * numCols + col) * 4; 
+            const r = downscaledPixelData[pixelIndex];
+            const g = downscaledPixelData[pixelIndex + 1];
+            const b = downscaledPixelData[pixelIndex + 2];
+            const avgBrightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            
 
             if (avgBrightness > threshold) {
                 switch (selectedCellTypeBright) {
                     case 'character':
                         hiResCtx.fillStyle = bgCellColorBright;
                         hiResCtx.fillRect(startX, startY, cellW, cellH);
+
+                        hiResCtx.save();
+                        hiResCtx.beginPath();
+                        hiResCtx.rect(startX, startY, cellW, cellH);
+                        hiResCtx.clip();
+                        
                         let idxBright = Math.round(((avgBrightness - threshold) / (255 - threshold)) * (charsBright.length - 1));
                         idxBright = Math.max(0, Math.min(charsBright.length - 1, idxBright));
                         hiResCtx.fillStyle = colorValueBright;
                         hiResCtx.fillText(charsBright[idxBright], startX, startY);
+
+                        hiResCtx.restore();
                         break;
                     case 'icon':
                         if (icon1Loaded) {
                             hiResCtx.drawImage(hiResIcon1Image || icon1Image, startX, startY, cellW, cellH);
                         } else {
+                            
+                            hiResCtx.fillStyle = bgCellColorBright;
+                            hiResCtx.fillRect(startX, startY, cellW, cellH);
+                            hiResCtx.save();
+                            hiResCtx.beginPath();
+                            hiResCtx.rect(startX, startY, cellW, cellH);
+                            hiResCtx.clip();
                             hiResCtx.fillStyle = colorValueBright;
-                            hiResCtx.fillText(charsBright[idxBright], startX, startY);
+                            const placeholderBright = charsBright.length > 0 ? charsBright[0] : '?';
+                            hiResCtx.fillText(placeholderBright, startX, startY);
+                            hiResCtx.restore();
                         }
                         break;
                     case 'gradient':
@@ -1020,17 +1067,34 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
                     case 'character':
                         hiResCtx.fillStyle = bgCellColorDark;
                         hiResCtx.fillRect(startX, startY, cellW, cellH);
+
+                        hiResCtx.save();
+                        hiResCtx.beginPath();
+                        hiResCtx.rect(startX, startY, cellW, cellH);
+                        hiResCtx.clip();
+
                         let idxDark = Math.round((avgBrightness / threshold) * (charsDark.length - 1));
                         idxDark = Math.max(0, Math.min(charsDark.length - 1, idxDark));
                         hiResCtx.fillStyle = colorValueDark;
                         hiResCtx.fillText(charsDark[idxDark], startX, startY);
+                        
+                        hiResCtx.restore();
                         break;
                     case 'icon':
                         if (icon0Loaded) {
                             hiResCtx.drawImage(hiResIcon0Image || icon0Image, startX, startY, cellW, cellH);
                         } else {
+                            
+                            hiResCtx.fillStyle = bgCellColorDark;
+                            hiResCtx.fillRect(startX, startY, cellW, cellH);
+                            hiResCtx.save();
+                            hiResCtx.beginPath();
+                            hiResCtx.rect(startX, startY, cellW, cellH);
+                            hiResCtx.clip();
                             hiResCtx.fillStyle = colorValueDark;
-                            hiResCtx.fillText(charsDark[idxDark], startX, startY);
+                            const placeholderDark = charsDark.length > 0 ? charsDark[0] : '?';
+                            hiResCtx.fillText(placeholderDark, startX, startY);
+                            hiResCtx.restore();
                         }
                         break;
                     case 'gradient':
@@ -1675,6 +1739,14 @@ loopVideoCheckbox.addEventListener('change', () => {
 });
 
 function enableLivePreviewForImage() {
+    
+    if (document.getElementById('live-preview')) {
+        
+        
+        
+        return;
+    }
+
     const livePreviewContainer = document.createElement('div');
     livePreviewContainer.className = 'video-controls-option';
     livePreviewContainer.innerHTML = `
@@ -1745,3 +1817,295 @@ function enableLivePreviewForImage() {
         updateLivePreview();
     }
 }
+
+
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const tutorialPopover = document.getElementById('tutorial-popover');
+const tutorialContent = document.getElementById('tutorial-content');
+const tutorialPrevBtn = document.getElementById('tutorial-prev');
+const tutorialNextBtn = document.getElementById('tutorial-next');
+const tutorialSkipBtn = document.getElementById('tutorial-skip');
+const showTutorialButton = document.getElementById('show-tutorial-button');
+
+const tutorialSteps = [
+    {
+        element: '.controls .step-accordion:nth-of-type(1)', 
+        title: 'Step 1: Select Source',
+        text: 'Welcome to CHAR/ISMA! Start by uploading an image or video, or use your webcam. This will be the source for your artwork.',
+        position: 'right' 
+    },
+    {
+        element: '.controls .step-accordion:nth-of-type(2)', 
+        title: 'Step 2: Adjust Grid',
+        text: 'Next, define the grid. "Grid Resolution" controls how many cells your artwork will have. "Light/Dark Threshold" determines what\'s considered a light or dark area.',
+        position: 'right'
+    },
+    {
+        element: '.controls .step-accordion:nth-of-type(3)', 
+        title: 'Step 3: Design Style',
+        text: 'This is where the magic happens! Customize how dark and light areas are represented. You can use characters, upload custom icons, create gradients, or use solid colors.',
+        position: 'right'
+    },
+    {
+        element: '.controls .step-accordion:nth-of-type(3) #invert-cell-styles', 
+        title: 'Swap Styles',
+        text: 'Quickly swap the styles you\'ve defined for dark and light areas with this button.',
+        position: 'bottom'
+    },
+    {
+        element: '.controls .step-accordion:nth-of-type(4)', 
+        title: 'Step 4: Preview & Process',
+        text: 'For images, click "Apply Effect" to see your changes. For videos, controls for play/pause will appear here once a video is loaded. Live preview is on for images by default.',
+        position: 'right'
+    },
+    {
+        element: '.controls .step-accordion:nth-of-type(5)', 
+        title: 'Step 5: Export & Share',
+        text: 'Once you\'re happy, capture the current frame as a high-resolution image or record your processed video.',
+        position: 'right'
+    },
+    {
+        element: '#canvas', 
+        title: 'The Canvas',
+        text: 'Your masterpiece will be rendered here. Watch it transform as you adjust settings!',
+        position: 'center' 
+    },
+    {
+        element: '#show-tutorial-button', 
+        title: 'Revisit Tutorial',
+        text: 'You can always click this button to see the tutorial again. Enjoy creating with CHAR/ISMA!',
+        position: 'top'
+    }
+];
+
+let currentTutorialStep = 0;
+let highlightedElement = null;
+
+function positionPopover(elementRect) {
+    const popoverRect = tutorialPopover.getBoundingClientRect();
+    const step = tutorialSteps[currentTutorialStep];
+    let top, left;
+
+    switch (step.position) {
+        case 'right':
+            top = elementRect.top;
+            left = elementRect.right + 15;
+            if (left + popoverRect.width > window.innerWidth) {
+                left = elementRect.left - popoverRect.width - 15;
+            }
+            break;
+        case 'left':
+            top = elementRect.top;
+            left = elementRect.left - popoverRect.width - 15;
+            if (left < 0) {
+                left = elementRect.right + 15;
+            }
+            break;
+        case 'bottom':
+            top = elementRect.bottom + 15;
+            left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
+            break;
+        case 'top':
+            top = elementRect.top - popoverRect.height - 15;
+            left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
+            break;
+        case 'center':
+        default: 
+            top = (window.innerHeight / 2) - (popoverRect.height / 2);
+            left = (window.innerWidth / 2) - (popoverRect.width / 2);
+            break;
+    }
+    
+    
+    if (top < 0) top = 10;
+    if (left < 0) left = 10;
+    if (top + popoverRect.height > window.innerHeight) top = window.innerHeight - popoverRect.height - 10;
+    if (left + popoverRect.width > window.innerWidth) left = window.innerWidth - popoverRect.width - 10;
+
+    tutorialPopover.style.top = `${top}px`;
+    tutorialPopover.style.left = `${left}px`;
+}
+
+
+function showTutorialStep(stepIndex) {
+    if (stepIndex < 0 || stepIndex >= tutorialSteps.length) {
+        endTutorial();
+        return;
+    }
+    currentTutorialStep = stepIndex;
+    const step = tutorialSteps[stepIndex];
+
+    if (highlightedElement) {
+        highlightedElement.classList.remove('tutorial-highlight');
+        if (highlightedElement.tagName === 'DETAILS') {
+            highlightedElement.open = false; 
+        }
+    }
+    
+    const elementToHighlight = document.querySelector(step.element);
+
+    if (elementToHighlight) {
+        highlightedElement = elementToHighlight;
+        highlightedElement.classList.add('tutorial-highlight');
+        
+        if (highlightedElement.tagName === 'DETAILS') {
+            highlightedElement.open = true; 
+        }
+        
+        elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        
+        
+        setTimeout(() => {
+            const rect = elementToHighlight.getBoundingClientRect();
+            positionPopover(rect);
+        }, 300); 
+        
+    } else {
+        
+        const dummyRect = { top: window.innerHeight/2, left: window.innerWidth/2, width:0, height:0, right: window.innerWidth/2, bottom: window.innerHeight/2 };
+        positionPopover(dummyRect);
+    }
+    
+    tutorialContent.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p>`;
+    tutorialPrevBtn.disabled = stepIndex === 0;
+    tutorialNextBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'FINISH' : 'NEXT';
+    
+    tutorialOverlay.style.display = 'flex';
+}
+
+function startTutorial() {
+    tutorialOverlay.style.display = 'flex';
+    currentTutorialStep = 0;
+    showTutorialStep(currentTutorialStep);
+    
+    const controlsPanel = document.querySelector('.controls');
+    if (controlsPanel && tutorialSteps[0].element.startsWith('.controls')) {
+        controlsPanel.scrollTop = 0;
+    }
+}
+
+function endTutorial() {
+    tutorialOverlay.style.display = 'none';
+    if (highlightedElement) {
+        highlightedElement.classList.remove('tutorial-highlight');
+        if (highlightedElement.tagName === 'DETAILS' && highlightedElement.open) {
+             
+        }
+    }
+    highlightedElement = null;
+    localStorage.setItem('charismaTutorialSeen', 'true');
+}
+
+tutorialNextBtn.addEventListener('click', () => {
+    showTutorialStep(currentTutorialStep + 1);
+});
+
+tutorialPrevBtn.addEventListener('click', () => {
+    showTutorialStep(currentTutorialStep - 1);
+});
+
+tutorialSkipBtn.addEventListener('click', endTutorial);
+showTutorialButton.addEventListener('click', startTutorial);
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    updateGradientPreviews();
+    updateGridSizeDisplay();
+    setupVideoEvents();      
+    updateButtonStates();     
+    setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
+    setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
+    resizeCanvas();
+    loadUserPreferences();
+    enableLivePreviewForImage(); 
+
+    
+    if (localStorage.getItem('charismaTutorialSeen') !== 'true') {
+        
+        setTimeout(startTutorial, 500);
+    }
+
+    
+    const tooltipContainer = document.getElementById('tooltip-container');
+    const tooltipTriggers = document.querySelectorAll('.tooltip-trigger');
+
+    tooltipTriggers.forEach(trigger => {
+        trigger.addEventListener('mouseover', (event) => {
+            const tooltipText = trigger.dataset.tooltipText;
+            if (!tooltipText) return;
+
+            tooltipContainer.innerHTML = tooltipText;
+            tooltipContainer.style.display = 'block';
+
+            const triggerRect = trigger.getBoundingClientRect();
+            const containerRect = tooltipContainer.getBoundingClientRect();
+            
+            let top = triggerRect.bottom + 5; 
+            let left = triggerRect.left + (triggerRect.width / 2) - (containerRect.width / 2); 
+
+            
+            if (left < 0) {
+                left = 5;
+            }
+            if (left + containerRect.width > window.innerWidth) {
+                left = window.innerWidth - containerRect.width - 5;
+            }
+            if (top + containerRect.height > window.innerHeight) {
+                top = triggerRect.top - containerRect.height - 5; 
+            }
+            
+            tooltipContainer.style.top = `${top + window.scrollY}px`;
+            tooltipContainer.style.left = `${left + window.scrollX}px`;
+        });
+
+        trigger.addEventListener('mouseout', () => {
+            tooltipContainer.style.display = 'none';
+        });
+        
+        
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault(); 
+            const tooltipText = trigger.dataset.tooltipText;
+            if (!tooltipText) return;
+
+            if (tooltipContainer.style.display === 'block' && tooltipContainer.innerHTML === tooltipText) {
+                 tooltipContainer.style.display = 'none';
+                 return;
+            }
+
+            tooltipContainer.innerHTML = tooltipText;
+            tooltipContainer.style.display = 'block';
+
+            const triggerRect = trigger.getBoundingClientRect();
+            const containerRect = tooltipContainer.getBoundingClientRect();
+            let top = triggerRect.bottom + 8;
+            let left = triggerRect.left + (triggerRect.width / 2) - (containerRect.width / 2);
+
+            if (left < 0) left = 5;
+            if (left + containerRect.width > window.innerWidth) left = window.innerWidth - containerRect.width - 5;
+            if (top + containerRect.height > window.innerHeight) top = triggerRect.top - containerRect.height - 8;
+            
+            tooltipContainer.style.top = `${top + window.scrollY}px`;
+            tooltipContainer.style.left = `${left + window.scrollX}px`;
+        });
+    });
+    
+    
+    document.addEventListener('click', function(event) {
+        let targetElement = event.target;
+        let isTooltipTrigger = false;
+        while (targetElement) {
+            if (targetElement.classList && targetElement.classList.contains('tooltip-trigger')) {
+                isTooltipTrigger = true;
+                break;
+            }
+            targetElement = targetElement.parentElement;
+        }
+
+        if (!isTooltipTrigger && tooltipContainer.style.display === 'block') {
+            tooltipContainer.style.display = 'none';
+        }
+    });
+
+});

@@ -15,6 +15,7 @@
     <video id="source-video" style="display: none;" playsinline muted></video>
     <div class="overlay">
         <div class="controls">
+            <button id="show-tutorial-button" class="tutorial-button show-tutorial-button" title="Show Tutorial"><i class="fas fa-question-circle"></i></button>
             <h2 class="app-title">CHAR/ISMA</h2>
             <details class="accordion step-accordion" open>
                 <summary>
@@ -41,14 +42,14 @@
                     </div>
                 </summary>
                 <div class="content">
-                    <label for="gridSize">GRID RESOLUTION:</label>
+                    <label for="gridSize">GRID RESOLUTION: <span class="tooltip-trigger" data-tooltip-text="Controls the number of cells (width). Higher values mean more detail but smaller elements. The height is calculated automatically.">(?)</span></label>
                     <input type="range" id="gridSize" min="10" max="200" value="80">
                     <div class="grid-info">
                         <span id="gridSizeDisplay">80 x 45</span>
                     </div>
-                    <label for="threshold">LIGHT/DARK THRESHOLD:</label>
+                    <label for="threshold">LIGHT/DARK THRESHOLD: <span class="tooltip-trigger" data-tooltip-text="Determines the brightness cutoff. Pixels brighter than this value are 'Light Areas', darker are 'Dark Areas'.">(?)</span></label>
                     <input type="range" id="threshold" min="0" max="255" value="128">
-                    <label for="bgColor">BACKGROUND COLOR:</label>
+                    <label for="bgColor">BACKGROUND COLOR: <span class="tooltip-trigger" data-tooltip-text="Sets the base background color of the canvas before any elements are drawn.">(?)</span></label>
                     <input type="color" id="bgColor" value="#FFFFFF">
                 </div>
             </details>
@@ -60,16 +61,16 @@
                 </summary>
                 <div class="content">
                     <button id="invert-cell-styles" class="style-invert-btn">
-                        <i class="fas fa-sync-alt"></i> SWAP LIGHT/DARK STYLES
+                        <i class="fas fa-sync-alt"></i> SWAP LIGHT/DARK STYLES <span class="tooltip-trigger" data-tooltip-text="Swaps all style settings (character, icon, gradient, solid color) between Dark and Light areas.">(?)</span>
                     </button>
                     <div class="cell-style-section">
-                        <h4><i class="fas fa-square"></i> DARK AREAS</h4>
+                        <h4><i class="fas fa-square"></i> DARK AREAS <span class="tooltip-trigger" data-tooltip-text="Define how pixels darker than the threshold are styled.">(?)</span></h4>
                         <div class="control-group">
                             <label>
                                 <input type="radio" name="cellTypeDark" value="character" checked> CHARACTER
                             </label>
                             <div id="character-controls-dark">
-                                <label for="char0">CHARACTERS (DARK):</label>
+                                <label for="char0">CHARACTERS (DARK): <span class="tooltip-trigger" data-tooltip-text="Enter a sequence of characters. Leftmost = darkest pixels, rightmost = lightest pixels within the 'dark' range.">(?)</span></label>
                                 <input type="text" id="char0" maxlength="20" value="@%#*+=-:. ">
                                 <small>Use multiple characters. The character shown will depend on cell brightness (darkest: left, brightest: right).</small>
                                 <label for="textColor0">TEXT COLOR:</label>
@@ -85,7 +86,7 @@
                             <div id="icon-controls-dark" style="display: none;">
                                 <div class="file-input-wrapper">
                                     <div class="file-input-button">
-                                        <i class="fas fa-image"></i> SELECT ICON
+                                        <i class="fas fa-image"></i> SELECT ICON <span class="tooltip-trigger" data-tooltip-text="Upload a small image/icon to represent dark areas. Transparent backgrounds are recommended.">(?)</span>
                                     </div>
                                     <input type="file" id="icon0-upload" accept="image/*">
                                 </div>
@@ -108,7 +109,7 @@
                                             <input type="color" id="gradient0Color2" value="#0000ff">
                                         </div>
                                     </div>
-                                    <label for="gradient0Direction">DIRECTION:</label>
+                                    <label for="gradient0Direction">DIRECTION: <span class="tooltip-trigger" data-tooltip-text="Horizontal: Left-to-Right. Vertical: Top-to-Bottom. Diagonal: Top-Left to Bottom-Right.">(?)</span></label>
                                     <select id="gradient0Direction">
                                         <option value="horizontal">HORIZONTAL</option>
                                         <option value="vertical">VERTICAL</option>
@@ -131,13 +132,13 @@
                         </div>
                     </div>
                     <div class="cell-style-section">
-                        <h4><i class="fas fa-square-full"></i> LIGHT AREAS</h4>
+                        <h4><i class="fas fa-square-full"></i> LIGHT AREAS <span class="tooltip-trigger" data-tooltip-text="Define how pixels brighter than the threshold are styled.">(?)</span></h4>
                         <div class="control-group">
                             <label>
                                 <input type="radio" name="cellTypeBright" value="character" checked> CHARACTER
                             </label>
                             <div id="character-controls-bright">
-                                <label for="char1">CHARACTERS (BRIGHT):</label>
+                                <label for="char1">CHARACTERS (BRIGHT): <span class="tooltip-trigger" data-tooltip-text="Enter a sequence of characters. Leftmost = darkest pixels, rightmost = brightest pixels within the 'light' range.">(?)</span></label>
                                 <input type="text" id="char1" maxlength="20" value="@%#*+=-:. ">
                                 <small>Use multiple characters. The character shown will depend on cell brightness (darkest: left, brightest: right).</small>
                                 <label for="textColor1">TEXT COLOR:</label>
@@ -153,7 +154,7 @@
                             <div id="icon-controls-bright" style="display: none;">
                                 <div class="file-input-wrapper">
                                     <div class="file-input-button">
-                                        <i class="fas fa-image"></i> SELECT ICON
+                                        <i class="fas fa-image"></i> SELECT ICON <span class="tooltip-trigger" data-tooltip-text="Upload a small image/icon to represent light areas. Transparent backgrounds are recommended.">(?)</span>
                                     </div>
                                     <input type="file" id="icon1-upload" accept="image/*">
                                 </div>
@@ -176,7 +177,7 @@
                                             <input type="color" id="gradient1Color2" value="#0000ff">
                                         </div>
                                     </div>
-                                    <label for="gradient1Direction">DIRECTION:</label>
+                                    <label for="gradient1Direction">DIRECTION: <span class="tooltip-trigger" data-tooltip-text="Horizontal: Left-to-Right. Vertical: Top-to-Bottom. Diagonal: Top-Left to Bottom-Right.">(?)</span></label>
                                     <select id="gradient1Direction">
                                         <option value="horizontal">HORIZONTAL</option>
                                         <option value="vertical">VERTICAL</option>
@@ -230,11 +231,11 @@
                         </div>
                         <div class="video-controls-option">
                             <label for="loop-video" class="loop-control">
-                                <input type="checkbox" id="loop-video"> LOOP VIDEO
+                                <input type="checkbox" id="loop-video"> LOOP VIDEO <span class="tooltip-trigger" data-tooltip-text="If checked, the video will automatically restart when it finishes.">(?)</span>
                             </label>
                         </div>
                         <div class="video-timeline" id="video-timeline" style="display: none;">
-                            <input type="range" id="video-scrubber" min="0" max="100" value="0" step="0.1">
+                            <input type="range" id="video-scrubber" min="0" max="100" value="0" step="0.1"> <span class="tooltip-trigger" data-tooltip-text="Drag to seek to a specific point in the video.">(?)</span>
                             <div class="timeline-info">
                                 <span id="current-time">00:00</span> / <span id="total-time">00:00</span>
                             </div>
@@ -251,7 +252,7 @@
                 <div class="content">
                     <div class="actions-group">
                         <a id="capture-frame" class="action-btn" style="display:none;" download="processed_frame.png">
-                            <i class="fas fa-camera"></i> CAPTURE CURRENT FRAME
+                            <i class="fas fa-camera"></i> CAPTURE CURRENT FRAME <span class="tooltip-trigger" data-tooltip-text="Saves the currently displayed canvas content as a high-resolution PNG image.">(?)</span>
                         </a>
                     </div>
                     
@@ -259,10 +260,10 @@
                         <div class="actions-heading"><i class="fas fa-film"></i> VIDEO RECORDING</div>
                         <div class="control-grid">
                             <button id="start-recording" disabled>
-                                <i class="fas fa-record-vinyl"></i> START RECORDING
+                                <i class="fas fa-record-vinyl"></i> START RECORDING <span class="tooltip-trigger" data-tooltip-text="Starts recording the animated canvas output as a video file (usually WebM or MP4, browser dependent).">(?)</span>
                             </button>
                             <button id="stop-recording" disabled>
-                                <i class="fas fa-stop"></i> STOP & SAVE
+                                <i class="fas fa-stop"></i> STOP & SAVE <span class="tooltip-trigger" data-tooltip-text="Stops the current recording and prompts for download.">(?)</span>
                             </button>
                         </div>
                     </div>
@@ -295,6 +296,18 @@
     </div>
     <img id="thumbnail" class="thumbnail" style="display:none;">
     <video id="video-thumbnail" class="thumbnail" style="display:none;" playsinline muted></video>
+
+    <div id="tutorial-overlay" class="tutorial-overlay" style="display: none;">
+        <div id="tutorial-popover" class="tutorial-popover">
+            <div id="tutorial-content"></div>
+            <div class="tutorial-navigation">
+                <button id="tutorial-prev" class="tutorial-button"><i class="fas fa-arrow-left"></i> PREVIOUS</button>
+                <button id="tutorial-next" class="tutorial-button">NEXT <i class="fas fa-arrow-right"></i></button>
+                <button id="tutorial-skip" class="tutorial-button tutorial-skip-button">SKIP TUTORIAL <i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    </div>
+    <div id="tooltip-container" class="tooltip" style="display:none;"></div>
     <script src="script.js"></script>
 </body>
 </html>
