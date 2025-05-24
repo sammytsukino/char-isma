@@ -1287,6 +1287,10 @@ function invertCellStyles() {
     
     textColor0Input.value = brightTextColor;
     textColor1Input.value = darkTextColor;
+
+    const tempBgColor = backgroundColor0Input.value;
+    backgroundColor0Input.value = backgroundColor1Input.value;
+    backgroundColor1Input.value = tempBgColor;
     
     gradient0Color1Input.value = brightGradient.color1;
     gradient0Color2Input.value = brightGradient.color2;
