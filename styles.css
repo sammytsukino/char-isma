@@ -115,16 +115,16 @@ select,
   color: #000000;
   font-size: 12px;
   text-transform: uppercase;
-  text-align: center;
+  cursor: pointer;
+  text-align: left;
   font-weight: bold;
   letter-spacing: 1px;
   margin: 6px 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* <-- Cambia esto de center a flex-start */
+  justify-content: flex-start;
   gap: 8px;
-  pointer-events: none;
 }
 
 button:hover:not(:disabled),
@@ -339,14 +339,14 @@ input[type="radio"]:checked:before {
   color: #000000;
   font-size: 12px;
   text-transform: uppercase;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
   letter-spacing: 1px;
   margin: 6px 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* <-- Cambia esto de center a flex-start */
+  justify-content: flex-start;
   gap: 8px;
   pointer-events: none;
 }
@@ -464,6 +464,10 @@ legend {
 }
 
 @media (max-width: 768px) {
+  .tutorial-overlay {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
   .controls {
     width: 100%;
     height: 55vh;
@@ -608,9 +612,13 @@ legend {
 
   .tutorial-popover {
     width: 90%;
-    max-width: 300px;
-    padding: 15px;
+    max-width: 320px;
+    padding: 12px;
     position: fixed !important;
+    top: 10px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 10000;
   }
 
   .tutorial-content {
@@ -645,6 +653,35 @@ legend {
   .tutorial-skip-button {
     width: 100%;
     text-align: center;
+  }
+
+  .tutorial-highlight {
+    z-index: 9995 !important;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #000000 !important;
+    position: relative;
+  }
+
+  .tutorial-highlight::after {
+    content: "👆 TAP HERE TO CONTINUE";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000000;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 2px;
+    z-index: 9996;
+    pointer-events: none;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
 
   .show-tutorial-button {
@@ -1049,7 +1086,7 @@ button i,
 .tutorial-button {
     font-family: 'JetBrains Mono', monospace;
     padding: 6px 8px;
-    border: 0px solid #ffffff;
+    border: none;
     background-color: #ffffff;
     color: #000000;
     font-size: 10px;

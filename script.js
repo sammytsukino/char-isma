@@ -1880,38 +1880,49 @@ let currentTutorialStep = 0;
 let highlightedElement = null;
 
 function positionPopover(elementRect) {
-    const controlsPanel = document.querySelector('.controls');
+    const isMobile = window.innerWidth <= 768;
     
     // Set initial position to get accurate dimensions
     tutorialPopover.style.position = 'fixed';
-    tutorialPopover.style.top = '0px';
-    tutorialPopover.style.left = '0px';
     tutorialPopover.style.opacity = '0';
     tutorialPopover.style.visibility = 'visible';
     
-    // Force a layout to get accurate dimensions
-    const popoverRect = tutorialPopover.getBoundingClientRect();
-    
-    // Always position relative to the controls panel
-    let top = elementRect.top;
-    let left = controlsPanel.offsetWidth + 15; // 15px padding from controls panel
+    if (isMobile) {
+        // In mobile, always position at the top center (CSS handles this)
+        tutorialPopover.style.transform = 'translateX(-50%)';
+        tutorialPopover.style.top = '10px';
+        tutorialPopover.style.left = '50%';
+    } else {
+        // Desktop positioning (original logic)
+        const controlsPanel = document.querySelector('.controls');
+        tutorialPopover.style.top = '0px';
+        tutorialPopover.style.left = '0px';
+        tutorialPopover.style.transform = 'none';
+        
+        // Force a layout to get accurate dimensions
+        const popoverRect = tutorialPopover.getBoundingClientRect();
+        
+        // Always position relative to the controls panel
+        let top = elementRect.top;
+        let left = controlsPanel.offsetWidth + 15; // 15px padding from controls panel
 
-    // Adjust if popover goes too far down
-    if (top + popoverRect.height > window.innerHeight - 10) {
-        top = window.innerHeight - popoverRect.height - 10;
-    }
-    // Adjust if popover tries to go above the viewport
-    if (top < 10) {
-        top = 10;
-    }
+        // Adjust if popover goes too far down
+        if (top + popoverRect.height > window.innerHeight - 10) {
+            top = window.innerHeight - popoverRect.height - 10;
+        }
+        // Adjust if popover tries to go above the viewport
+        if (top < 10) {
+            top = 10;
+        }
 
-    // If popover goes off-screen to the right, position it to the left of the controls
-    if (left + popoverRect.width > window.innerWidth - 10) {
-        left = controlsPanel.offsetLeft - popoverRect.width - 15;
-    }
+        // If popover goes off-screen to the right, position it to the left of the controls
+        if (left + popoverRect.width > window.innerWidth - 10) {
+            left = controlsPanel.offsetLeft - popoverRect.width - 15;
+        }
 
-    tutorialPopover.style.top = `${top}px`;
-    tutorialPopover.style.left = `${left}px`;
+        tutorialPopover.style.top = `${top}px`;
+        tutorialPopover.style.left = `${left}px`;
+    }
     
     // Show the popover with a smooth fade-in
     setTimeout(() => {
@@ -1927,9 +1938,14 @@ function showTutorialStep(stepIndex) {
     }
     currentTutorialStep = stepIndex;
     const step = tutorialSteps[stepIndex];
+    const isMobile = window.innerWidth <= 768;
 
     // Set content first
-    tutorialContent.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p>`;
+    let tutorialText = step.text;
+    if (isMobile) {
+        tutorialText += '<br><br><small>🔍 The highlighted area shows what this step covers.</small>';
+    }
+    tutorialContent.innerHTML = `<h3>${step.title}</h3><p>${tutorialText}</p>`;
     tutorialPrevBtn.disabled = stepIndex === 0;
     tutorialNextBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'FINISH' : 'NEXT';
     
@@ -1946,8 +1962,18 @@ function showTutorialStep(stepIndex) {
     const elementToHighlight = document.querySelector(step.element);
 
     if (elementToHighlight) {
+        // Remove previous event listener if exists
+        if (highlightedElement) {
+            highlightedElement.removeEventListener('click', mobileHighlightClickHandler);
+        }
+        
         highlightedElement = elementToHighlight;
         highlightedElement.classList.add('tutorial-highlight');
+        
+        // Add mobile click handler
+        if (isMobile) {
+            highlightedElement.addEventListener('click', mobileHighlightClickHandler);
+        }
         
         if (highlightedElement.tagName === 'DETAILS') {
             highlightedElement.open = true; 
@@ -1957,8 +1983,10 @@ function showTutorialStep(stepIndex) {
         const rect = elementToHighlight.getBoundingClientRect();
         positionPopover(rect);
         
-        // Scroll after positioning
-        elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        // Scroll after positioning (only on desktop or when element is not visible)
+        if (!isMobile || rect.top < 0 || rect.bottom > window.innerHeight) {
+            elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }
         
     } else {
         // For elements not found (like show-tutorial-button), position at center-right
@@ -1984,12 +2012,22 @@ function endTutorial() {
     
     if (highlightedElement) {
         highlightedElement.classList.remove('tutorial-highlight');
+        highlightedElement.removeEventListener('click', mobileHighlightClickHandler);
         if (highlightedElement.tagName === 'DETAILS' && highlightedElement.open) {
              
         }
     }
     highlightedElement = null;
     localStorage.setItem('charismaTutorialSeen', 'true');
+}
+
+function mobileHighlightClickHandler(event) {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && currentTutorialStep < tutorialSteps.length - 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        showTutorialStep(currentTutorialStep + 1);
+    }
 }
 
 tutorialNextBtn.addEventListener('click', () => {
