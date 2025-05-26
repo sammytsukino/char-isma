@@ -609,6 +609,7 @@ legend {
     width: 90%;
     max-width: 300px;
     padding: 15px;
+    position: fixed !important;
   }
 
   .tutorial-content {
@@ -620,8 +621,29 @@ legend {
   }
 
   .tutorial-button {
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 4px 6px;
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    gap: 2px;
+  }
+  
+  .tutorial-navigation {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .tutorial-nav-buttons {
+    width: 100%;
+    gap: 4px;
+  }
+  
+  .tutorial-nav-buttons .tutorial-button {
+    flex: 1;
+  }
+  
+  .tutorial-skip-button {
+    width: 100%;
+    text-align: center;
   }
 
   .show-tutorial-button {
@@ -969,20 +991,21 @@ button i,
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6); 
     z-index: 9990; 
-    display: flex; 
-    justify-content: center;
-    align-items: center;
+    display: block; 
 }
 
 .tutorial-popover {
     background-color: #ffffff;
     border: 2px solid #000000;
-    padding: 20px;
-    width: 300px; 
+    padding: 15px;
+    width: 280px; 
     max-width: 90%;
     box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.3); 
     position: fixed; 
     z-index: 9991;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    box-sizing: border-box;
 }
 
 .tutorial-content {
@@ -1012,23 +1035,36 @@ button i,
     justify-content: space-between;
     align-items: center;
     margin-top: 15px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tutorial-nav-buttons {
+    display: flex;
+    gap: 6px;
+    flex: 1;
 }
 
 .tutorial-button {
     font-family: 'JetBrains Mono', monospace;
-    padding: 8px 12px;
-    border: 0px solid #000000;
+    padding: 6px 8px;
+    border: 0px solid #ffffff;
     background-color: #ffffff;
     color: #000000;
-    font-size: 12px;
+    font-size: 10px;
     text-transform: uppercase;
     cursor: pointer;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tutorial-button:hover {
@@ -1043,6 +1079,9 @@ button i,
 
 .tutorial-skip-button {
     background-color: #f0f0f0; 
+    flex: 0 0 auto;
+    font-size: 9px;
+    padding: 5px 6px;
 }
 
 .tutorial-skip-button:hover {

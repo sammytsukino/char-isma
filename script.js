@@ -1880,10 +1880,17 @@ let currentTutorialStep = 0;
 let highlightedElement = null;
 
 function positionPopover(elementRect) {
-    const popoverRect = tutorialPopover.getBoundingClientRect();
-    const step = tutorialSteps[currentTutorialStep];
     const controlsPanel = document.querySelector('.controls');
-    const targetElement = document.querySelector(step.element);
+    
+    // Set initial position to get accurate dimensions
+    tutorialPopover.style.position = 'fixed';
+    tutorialPopover.style.top = '0px';
+    tutorialPopover.style.left = '0px';
+    tutorialPopover.style.opacity = '0';
+    tutorialPopover.style.visibility = 'visible';
+    
+    // Force a layout to get accurate dimensions
+    const popoverRect = tutorialPopover.getBoundingClientRect();
     
     // Always position relative to the controls panel
     let top = elementRect.top;
@@ -1905,6 +1912,11 @@ function positionPopover(elementRect) {
 
     tutorialPopover.style.top = `${top}px`;
     tutorialPopover.style.left = `${left}px`;
+    
+    // Show the popover with a smooth fade-in
+    setTimeout(() => {
+        tutorialPopover.style.opacity = '1';
+    }, 50);
 }
 
 
@@ -1915,6 +1927,14 @@ function showTutorialStep(stepIndex) {
     }
     currentTutorialStep = stepIndex;
     const step = tutorialSteps[stepIndex];
+
+    // Set content first
+    tutorialContent.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p>`;
+    tutorialPrevBtn.disabled = stepIndex === 0;
+    tutorialNextBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'FINISH' : 'NEXT';
+    
+    // Show overlay
+    tutorialOverlay.style.display = 'block';
 
     if (highlightedElement) {
         highlightedElement.classList.remove('tutorial-highlight');
@@ -1933,29 +1953,21 @@ function showTutorialStep(stepIndex) {
             highlightedElement.open = true; 
         }
         
+        // Position popover immediately
+        const rect = elementToHighlight.getBoundingClientRect();
+        positionPopover(rect);
+        
+        // Scroll after positioning
         elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         
-        
-        setTimeout(() => {
-            const rect = elementToHighlight.getBoundingClientRect();
-            positionPopover(rect);
-        }, 300); 
-        
     } else {
-        
+        // For elements not found (like show-tutorial-button), position at center-right
         const dummyRect = { top: window.innerHeight/2, left: window.innerWidth/2, width:0, height:0, right: window.innerWidth/2, bottom: window.innerHeight/2 };
         positionPopover(dummyRect);
     }
-    
-    tutorialContent.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p>`;
-    tutorialPrevBtn.disabled = stepIndex === 0;
-    tutorialNextBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'FINISH' : 'NEXT';
-    
-    tutorialOverlay.style.display = 'flex';
 }
 
 function startTutorial() {
-    tutorialOverlay.style.display = 'flex';
     currentTutorialStep = 0;
     showTutorialStep(currentTutorialStep);
     
@@ -1967,6 +1979,9 @@ function startTutorial() {
 
 function endTutorial() {
     tutorialOverlay.style.display = 'none';
+    tutorialPopover.style.opacity = '0';
+    tutorialPopover.style.visibility = 'hidden';
+    
     if (highlightedElement) {
         highlightedElement.classList.remove('tutorial-highlight');
         if (highlightedElement.tagName === 'DETAILS' && highlightedElement.open) {
