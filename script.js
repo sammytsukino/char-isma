@@ -1888,43 +1888,80 @@ let highlightedElement = null;
 function positionPopover(elementRect) {
     const popoverRect = tutorialPopover.getBoundingClientRect();
     const step = tutorialSteps[currentTutorialStep];
+    const controlsPanel = document.querySelector('.controls');
+    const targetElement = document.querySelector(step.element); // Get the target element
     let top, left;
 
-    switch (step.position) {
-        case 'right':
-            top = elementRect.top;
-            left = elementRect.right + 15;
-            if (left + popoverRect.width > window.innerWidth) {
-                left = elementRect.left - popoverRect.width - 15;
+    const isInsideControls = controlsPanel && targetElement && controlsPanel.contains(targetElement);
+
+    if (isInsideControls && step.position === 'right') {
+        top = elementRect.top;
+        left = controlsPanel.offsetWidth + 15;
+
+        // Adjust if popover goes too far down
+        if (top + popoverRect.height > window.innerHeight - 10) {
+            top = window.innerHeight - popoverRect.height - 10;
+        }
+        // Adjust if popover tries to go above the viewport
+        if (top < 10) {
+            top = 10;
+        }
+
+        // If after placing to the right of controls, it still goes off-screen horizontally
+        if (left + popoverRect.width > window.innerWidth - 10) {
+            left = window.innerWidth - popoverRect.width - 10;
+            // Fallback: if it now overlaps controls or goes too left, position below element
+            if (left < controlsPanel.offsetWidth) {
+                 left = elementRect.left; 
+                 top = elementRect.bottom + 15;
+                 // Re-check bottom boundary if moved below
+                 if (top + popoverRect.height > window.innerHeight - 10) {
+                     top = window.innerHeight - popoverRect.height - 10;
+                 }
             }
-            break;
-        case 'left':
-            top = elementRect.top;
-            left = elementRect.left - popoverRect.width - 15;
-            if (left < 0) {
+        }
+    } else {
+        // Existing logic for other cases
+        switch (step.position) {
+            case 'right': // This will now only apply if NOT isInsideControls
+                top = elementRect.top;
                 left = elementRect.right + 15;
-            }
-            break;
-        case 'bottom':
-            top = elementRect.bottom + 15;
-            left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
-            break;
-        case 'top':
-            top = elementRect.top - popoverRect.height - 15;
-            left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
-            break;
-        case 'center':
-        default: 
-            top = (window.innerHeight / 2) - (popoverRect.height / 2);
-            left = (window.innerWidth / 2) - (popoverRect.width / 2);
-            break;
+                if (left + popoverRect.width > window.innerWidth - 10) { // Check against window edge
+                    left = elementRect.left - popoverRect.width - 15;
+                }
+                break;
+            case 'left':
+                top = elementRect.top;
+                left = elementRect.left - popoverRect.width - 15;
+                if (left < 10) { // Check against window edge
+                    left = elementRect.right + 15;
+                }
+                break;
+            case 'bottom':
+                top = elementRect.bottom + 15;
+                left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
+                break;
+            case 'top':
+                top = elementRect.top - popoverRect.height - 15;
+                left = elementRect.left + (elementRect.width / 2) - (popoverRect.width / 2);
+                break;
+            case 'center':
+            default:
+                top = (window.innerHeight / 2) - (popoverRect.height / 2);
+                left = (window.innerWidth / 2) - (popoverRect.width / 2);
+                break;
+        }
     }
-    
-    
-    if (top < 0) top = 10;
-    if (left < 0) left = 10;
-    if (top + popoverRect.height > window.innerHeight) top = window.innerHeight - popoverRect.height - 10;
-    if (left + popoverRect.width > window.innerWidth) left = window.innerWidth - popoverRect.width - 10;
+
+    // General viewport boundary checks (apply these after specific positioning)
+    if (top < 10) top = 10;
+    if (left < 10) left = 10;
+    if (top + popoverRect.height > window.innerHeight - 10) {
+        top = window.innerHeight - popoverRect.height - 10;
+    }
+    if (left + popoverRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - popoverRect.width - 10;
+    }
 
     tutorialPopover.style.top = `${top}px`;
     tutorialPopover.style.left = `${left}px`;
