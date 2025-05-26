@@ -22,8 +22,8 @@ html, body {
 #canvas {
   position: fixed;
   top: 0;
-  left: 300px;
-  width: calc(100% - 300px);
+  left: 350px;
+  width: calc(100% - 350px);
   height: 100%;
   z-index: 1;
 }
@@ -41,7 +41,7 @@ html, body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 300px;
+  width: 350px;
   height: 100vh;
   padding: 12px;
   display: flex;
@@ -108,7 +108,7 @@ select,
 .file-input-button {
   width: 100%;
   font-family: 'JetBrains Mono', monospace;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: 2px solid #000000;
   border-radius: 0;
   background-color: #ffffff;
@@ -116,14 +116,14 @@ select,
   font-size: 12px;
   text-transform: uppercase;
   cursor: pointer;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
   letter-spacing: 1px;
   margin: 6px 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
 }
 
@@ -295,9 +295,10 @@ input[type="radio"]:checked:before {
 
 .control-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   margin-bottom: 8px;
+  width: 100%;
 }
 
 .actions-panel {
@@ -331,7 +332,7 @@ input[type="radio"]:checked:before {
 .file-input-button {
   width: 100%;
   font-family: 'JetBrains Mono', monospace;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: 2px solid #000000;
   border-radius: 0;
   background-color: #ffffff;
@@ -464,12 +465,14 @@ legend {
 @media (max-width: 768px) {
   .controls {
     width: 100%;
-    height: auto;
-    max-height: 60vh;
+    height: 55vh;
+    max-height: 55vh;
     bottom: 0;
     top: auto;
     border-right: none;
     border-top: 2px solid #000000;
+    padding: 12px;
+    font-size: 11px;
   }
   
   .thumbnail {
@@ -481,12 +484,247 @@ legend {
     top: 0;
     left: 0;
     width: 100%;
-    height: calc(100% - 60vh);
+    height: 45vh;
     z-index: 1;
   }
-  
+
+  .control-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .actions-group {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  a.action-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+    margin: 4px 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  a.action-btn i {
+    font-size: 12px;
+    margin-right: 8px;
+  }
+
+  .actions-heading {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  button, 
+  input[type="file"], 
+  select, 
+  .action-btn, 
+  .file-input-button {
+    padding: 8px 12px;
+    font-size: 11px;
+    margin: 4px 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  button i,
+  .file-input-button i {
+    margin-right: 8px;
+  }
+
   .project-footer {
     margin-bottom: 10px;
+    padding-top: 8px;
+  }
+
+  .footer-content p {
+    font-size: 10px;
+  }
+
+  .app-title {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .accordion summary {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .accordion .content {
+    padding: 8px;
+  }
+
+  .control-group {
+    margin-bottom: 12px;
+  }
+
+  .control-group > label {
+    font-size: 11px;
+  }
+
+  input[type="range"] {
+    height: 24px;
+    margin: 8px 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 4px;
+    height: 16px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 4px;
+    height: 16px;
+  }
+
+  .grid-info {
+    margin-top: 2px;
+    margin-bottom: 12px;
+    padding: 6px;
+  }
+
+  #gridSizeDisplay {
+    font-size: 12px;
+  }
+
+  .cell-style-section {
+    margin-top: 16px;
+    padding-top: 8px;
+  }
+
+  .actions-group {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .actions-heading {
+    font-size: 10px;
+  }
+
+  .tutorial-popover {
+    width: 90%;
+    max-width: 300px;
+    padding: 15px;
+  }
+
+  .tutorial-content {
+    font-size: 12px;
+  }
+
+  .tutorial-content h3 {
+    font-size: 14px;
+  }
+
+  .tutorial-button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .show-tutorial-button {
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .show-tutorial-button i {
+    font-size: 12px;
+  }
+
+  .tooltip {
+    max-width: 200px;
+    font-size: 10px;
+    padding: 8px;
+  }
+
+  .tooltip-trigger {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+
+  .video-timeline {
+    margin-top: 8px;
+  }
+
+  .timeline-info {
+    font-size: 10px;
+  }
+
+  .status-bar {
+    bottom: 10px;
+    padding: 8px 15px;
+    font-size: 11px;
+  }
+
+  .shortcut-info {
+    margin-top: 12px;
+    padding: 8px;
+    font-size: 9px;
+  }
+
+  .shortcut-info h4 {
+    font-size: 11px;
+  }
+
+  .shortcut-info strong {
+    min-width: 32px;
+    padding: 1px 3px;
+  }
+
+  .credits {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .version {
+    font-size: 9px;
+    margin-top: 8px;
+    padding: 4px;
+  }
+}
+
+/* Ajustes adicionales para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .controls {
+    height: 60vh;
+    max-height: 60vh;
+    padding: 10px;
+  }
+
+  #canvas {
+    height: 40vh;
+  }
+
+  .accordion summary {
+    font-size: 10px;
+  }
+
+  button, 
+  input[type="file"], 
+  select, 
+  .action-btn, 
+  .file-input-button {
+    font-size: 10px;
+  }
+
+  .control-group > label {
+    font-size: 10px;
+  }
+
+  a.action-btn {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  a.action-btn i {
+    font-size: 11px;
   }
 }
 
@@ -494,6 +732,8 @@ legend {
   margin-bottom: 12px;
   border-bottom: 1px solid #000;
   padding-bottom: 8px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .actions-group:last-child {
@@ -507,13 +747,16 @@ legend {
   font-size: 11px;
   letter-spacing: 1px;
   color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 a.action-btn {
   display: flex;
   width: 100%;
   font-family: 'JetBrains Mono', monospace;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: 2px solid #000000;
   border-radius: 0;
   background-color: #ffffff;
@@ -521,25 +764,62 @@ a.action-btn {
   font-size: 12px;
   text-transform: uppercase;
   cursor: pointer;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
   letter-spacing: 1px;
   margin: 6px 0;
   transition: all 0.2s ease;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-a.action-btn:hover {
-  background-color: #000000;
-  color: #ffffff;
+button i,
+.action-btn i,
+.file-input-button i {
+  font-size: 14px;
+  margin-right: 8px;
 }
 
-a.action-btn:active {
-  background-color: #333333;
-  color: #ffffff;
+@media (max-width: 768px) {
+  .actions-group {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .actions-heading {
+    font-size: 10px;
+  }
+
+  .control-grid {
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  a.action-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+    margin: 4px 0;
+  }
+
+  a.action-btn i {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  a.action-btn {
+    font-size: 10px;
+    padding: 5px 6px;
+  }
+
+  a.action-btn i {
+    font-size: 9px;
+  }
 }
 
 .help-text {
@@ -698,10 +978,10 @@ a.action-btn:active {
     background-color: #ffffff;
     border: 2px solid #000000;
     padding: 20px;
-    width: 350px; 
+    width: 300px; 
     max-width: 90%;
     box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.3); 
-    position: relative; 
+    position: fixed; 
     z-index: 9991;
 }
 
@@ -710,6 +990,8 @@ a.action-btn:active {
     font-size: 13px;
     line-height: 1.6;
     text-transform: none; 
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 .tutorial-content h3 {
@@ -718,6 +1000,11 @@ a.action-btn:active {
     text-transform: uppercase;
     border-bottom: 2px solid #000;
     padding-bottom: 5px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding-top: 5px;
+    margin-top: -5px;
 }
 
 .tutorial-navigation {
