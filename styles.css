@@ -115,16 +115,16 @@ select,
   color: #000000;
   font-size: 12px;
   text-transform: uppercase;
-  cursor: pointer;
-  text-align: left;
+  text-align: center;
   font-weight: bold;
   letter-spacing: 1px;
   margin: 6px 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-start; /* <-- Cambia esto de center a flex-start */
   gap: 8px;
+  pointer-events: none;
 }
 
 button:hover:not(:disabled),
@@ -346,9 +346,10 @@ input[type="radio"]:checked:before {
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* <-- Cambia esto de center a flex-start */
   gap: 8px;
-  pointer-events: none; }
+  pointer-events: none;
+}
 
 .file-input-wrapper input[type=file] {
   position: absolute;
