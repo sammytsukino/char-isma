@@ -594,7 +594,7 @@ function drawProcessedEffect() {
 
     ctx.fillStyle = bgColorInput.value;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    ctx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px monospace`;
+    ctx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px ${canvasFontFamily}`;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
     ctx.imageSmoothingEnabled = false; 
@@ -930,7 +930,7 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
 
     hiResCtx.fillStyle = bgColorInput.value;
     hiResCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-    hiResCtx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px monospace`;
+    hiResCtx.font = `${Math.min(blockWidth, blockHeight) * 0.9}px ${canvasFontFamily}`;
     hiResCtx.textBaseline = "top";
     hiResCtx.textAlign = "left";
     hiResCtx.imageSmoothingEnabled = false; 
@@ -1640,7 +1640,8 @@ function saveUserPreferences() {
         gradient1Color2: gradient1Color2Input.value,
         gradient1Direction: gradient1DirectionInput.value,
         loopVideo: loopVideoCheckbox.checked,
-        livePreview: document.getElementById('live-preview')?.checked || false
+        livePreview: document.getElementById('live-preview')?.checked || false,
+        canvasFontFamily: canvasFontFamily
     };
     
     localStorage.setItem('charismaPreferences', JSON.stringify(preferences));
@@ -1698,6 +1699,11 @@ function loadUserPreferences() {
     setupCellTypeToggle('cellTypeDark', 'character-controls-dark', 'icon-controls-dark', 'gradient-controls-dark', 'solid-controls-dark');
     setupCellTypeToggle('cellTypeBright', 'character-controls-bright', 'icon-controls-bright', 'gradient-controls-bright', 'solid-controls-bright');
     updateGridSizeDisplay();
+
+    if (prefs.canvasFontFamily && canvasFontFamilySelect) {
+        canvasFontFamilySelect.value = prefs.canvasFontFamily;
+        canvasFontFamily = prefs.canvasFontFamily;
+    }
 }
 
 [char0Input, char1Input, textColor0Input, textColor1Input, bgColorInput, 
@@ -2143,3 +2149,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+
+// Font selector for canvas illustration
+const canvasFontFamilySelect = document.getElementById('canvasFontFamily');
+let canvasFontFamily = canvasFontFamilySelect ? canvasFontFamilySelect.value : "'JetBrains Mono', monospace";
+
+if (canvasFontFamilySelect) {
+    canvasFontFamilySelect.addEventListener('change', () => {
+        canvasFontFamily = canvasFontFamilySelect.value;
+        saveUserPreferences();
+        if (sourceType === 'image' && imageLoaded) {
+            drawProcessedEffect();
+        }
+    });
+}

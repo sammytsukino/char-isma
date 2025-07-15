@@ -6,6 +6,8 @@
     <title>CHAR/ISMA</title>
     <link rel="icon" href="https://res.cloudinary.com/dsy30p7gf/image/upload/v1744582316/Recurso_2charisma-ico_otizfc.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts: Monospace options for canvas rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fira+Mono:wght@400;700&family=Source+Code+Pro:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Roboto+Mono:wght@400;700&family=Cousine:wght@400;700&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -63,6 +65,22 @@
                     <button id="invert-cell-styles" class="style-invert-btn">
                         <i class="fas fa-sync-alt"></i> SWAP LIGHT/DARK STYLES <span class="tooltip-trigger" data-tooltip-text="Swaps all style settings (character, icon, gradient, solid color) between Dark and Light areas.">(?)</span>
                     </button>
+                    <!-- FONT SELECTOR FOR CANVAS ILLUSTRATION -->
+                    <div class="cell-style-section">
+                        <label for="canvasFontFamily"><i class="fas fa-font"></i> FONT FOR ILLUSTRATION:
+                            <span class="tooltip-trigger" data-tooltip-text="Choose the monospace font used for drawing characters in the illustration (canvas). This does not affect the UI font.">(?)</span>
+                        </label>
+                        <select id="canvasFontFamily">
+                            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                            <option value="'Fira Mono', monospace">Fira Mono</option>
+                            <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                            <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+                            <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                            <option value="'Cousine', monospace">Cousine</option>
+                            <option value="'Anonymous Pro', monospace">Anonymous Pro</option>
+                            <option value="monospace">System Default Monospace</option>
+                        </select>
+                    </div>
                     <div class="cell-style-section">
                         <h4><i class="fas fa-square"></i> DARK AREAS <span class="tooltip-trigger" data-tooltip-text="Define how pixels darker than the threshold are styled.">(?)</span></h4>
                         <div class="control-group">
