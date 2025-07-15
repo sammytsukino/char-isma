@@ -680,7 +680,13 @@ function drawProcessedEffect() {
                          }
                          break;
                     case 'solid':
-                        ctx.fillStyle = solidColorBright;
+                        if (solid0OriginalColorCheckbox && solid0OriginalColorCheckbox.checked) {
+                            // Color promedio realzado para zona oscura
+                            const enhanced = enhanceColor(r, g, b);
+                            ctx.fillStyle = enhanced;
+                        } else {
+                            ctx.fillStyle = solidColorDark;
+                        }
                         ctx.fillRect(startX, startY, cellW, cellH);
                         break;
                 }
@@ -728,7 +734,13 @@ function drawProcessedEffect() {
                          }
                          break;
                     case 'solid':
-                        ctx.fillStyle = solidColorDark;
+                        if (solid1OriginalColorCheckbox && solid1OriginalColorCheckbox.checked) {
+                            // Color promedio realzado para zona clara
+                            const enhanced = enhanceColor(r, g, b);
+                            ctx.fillStyle = enhanced;
+                        } else {
+                            ctx.fillStyle = solidColorBright;
+                        }
                         ctx.fillRect(startX, startY, cellW, cellH);
                         break;
                 }
@@ -1058,7 +1070,13 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
                          }
                          break;
                     case 'solid':
-                        hiResCtx.fillStyle = solidColorBright;
+                        if (solid1OriginalColorCheckbox && solid1OriginalColorCheckbox.checked) {
+                            // Color promedio realzado para zona clara
+                            const enhanced = enhanceColor(r, g, b);
+                            hiResCtx.fillStyle = enhanced;
+                        } else {
+                            hiResCtx.fillStyle = solidColorBright;
+                        }
                         hiResCtx.fillRect(startX, startY, cellW, cellH);
                         break;
                 }
@@ -1106,7 +1124,13 @@ function renderHighResolutionImage(hiResCanvas, hiResCtx) {
                          }
                          break;
                     case 'solid':
-                        hiResCtx.fillStyle = solidColorDark;
+                        if (solid0OriginalColorCheckbox && solid0OriginalColorCheckbox.checked) {
+                            // Color promedio realzado para zona oscura
+                            const enhanced = enhanceColor(r, g, b);
+                            hiResCtx.fillStyle = enhanced;
+                        } else {
+                            hiResCtx.fillStyle = solidColorDark;
+                        }
                         hiResCtx.fillRect(startX, startY, cellW, cellH);
                         break;
                 }
@@ -2162,4 +2186,49 @@ if (canvasFontFamilySelect) {
             drawProcessedEffect();
         }
     });
+}
+
+const solid0OriginalColorCheckbox = document.getElementById('solid0OriginalColor');
+const solid1OriginalColorCheckbox = document.getElementById('solid1OriginalColor');
+
+function enhanceColor(r, g, b) {
+    // Convert RGB to HSL
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    // Enhance: increase saturation and lightness
+    s = Math.min(1, s * 1.5 + 0.15); // boost saturation
+    l = Math.min(1, l * 1.15 + 0.08); // boost brightness
+    // Convert back to RGB
+    let r1, g1, b1;
+    if (s === 0) {
+        r1 = g1 = b1 = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r1 = hue2rgb(p, q, h + 1/3);
+        g1 = hue2rgb(p, q, h);
+        b1 = hue2rgb(p, q, h - 1/3);
+    }
+    return `rgb(${Math.round(r1 * 255)},${Math.round(g1 * 255)},${Math.round(b1 * 255)})`;
 }

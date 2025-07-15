@@ -1228,3 +1228,21 @@ label > .tooltip-trigger {
   outline: none;
   box-shadow: 0 0 0 2px #000000 inset;
 }
+#solid-controls-dark label[for="solid0Color"],
+#solid-controls-bright label[for="solid1Color"] {
+  margin-bottom: 4px;
+}
+#solid-controls-dark input[type="checkbox"],
+#solid-controls-bright input[type="checkbox"] {
+  margin-left: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+#solid-controls-dark label,
+#solid-controls-bright label {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0;
+}
